@@ -4,8 +4,9 @@
 	<parent>
 		<groupId>com.manzhizhen.sugarmq</groupId>
 		<artifactId>sugarmq-parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.1</version>
 	</parent>
+	
 	<artifactId>sugarmq-client</artifactId>
 	<name>SugarMQClient</name>
 

@@ -3,11 +3,9 @@
  */
 package com.sugarmq.transport.tcp;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
@@ -15,8 +13,6 @@ import javax.jms.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 
 /**
  * 客户端生产者tcp传输器的接收应答消息线程
@@ -48,7 +44,7 @@ public class TcpMessageTransportSendAcknowledgeThread implements Runnable{
 					continue;
 				}
 				
-				objectInputStream = new ObjectInputStream(new ByteInputStream(objectByte, byteNum));
+				objectInputStream = new ObjectInputStream(new ByteArrayInputStream(objectByte, 0, byteNum));
 				rcvMsgObj = objectInputStream.readObject();
 				
 				if(!(rcvMsgObj instanceof Message)) {

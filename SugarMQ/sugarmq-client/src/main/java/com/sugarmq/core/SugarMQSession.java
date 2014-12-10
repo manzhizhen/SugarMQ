@@ -29,7 +29,7 @@ import javax.jms.TopicSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.SugarMQConstant.MessageProperty;
+import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.message.bean.SugarTextMessage;
 import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.queue.SugarQueueReceiver;

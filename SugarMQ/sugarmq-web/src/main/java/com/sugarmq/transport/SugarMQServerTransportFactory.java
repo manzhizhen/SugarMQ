@@ -18,7 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import com.sugarmq.constant.SugarMQConstant.TransportType;
+import com.sugarmq.constant.TransportType;
 import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
 
 /**
@@ -56,7 +56,7 @@ public class SugarMQServerTransportFactory {
 				(byte) Integer.parseInt(ipAddressArray[2]),
 				(byte) Integer.parseInt(ipAddressArray[3]) };
 		
-		if(TransportType.TRANSPORT_TCP.getKey().equals(transportType)) {
+		if(TransportType.TRANSPORT_TCP.getValue().equals(transportType)) {
 			try {
 				tcpSugarMQServerTransport.setInetAddress(InetAddress.getByAddress(ipBytes) );
 				tcpSugarMQServerTransport.setPort(port);
@@ -69,7 +69,7 @@ public class SugarMQServerTransportFactory {
 			}
 			
 			
-		} else if(TransportType.TRANSPORT_NIO.getKey().equals(transportType)) {
+		} else if(TransportType.TRANSPORT_NIO.getValue().equals(transportType)) {
 			return null;
 		}
 		

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.manzhizhen.sugarmq</groupId>
 		<artifactId>sugarmq-parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.1</version>
 	</parent>
 	<artifactId>sugarmq-web</artifactId>
 	<name>SugarMQWeb</name>
@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>com.manzhizhen.sugarmq</groupId>
 			<artifactId>sugarmq-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 </project>

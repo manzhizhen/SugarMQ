@@ -10,8 +10,8 @@ import javax.jms.QueueSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.SugarMQConstant.MessageProperty;
-import com.sugarmq.constant.SugarMQConstant.MessageType;
+import com.sugarmq.constant.MessageProperty;
+import com.sugarmq.constant.MessageType;
 import com.sugarmq.core.SugarMessageProducer;
 import com.sugarmq.message.SugarDestination;
 import com.sugarmq.message.bean.SugarMessage;

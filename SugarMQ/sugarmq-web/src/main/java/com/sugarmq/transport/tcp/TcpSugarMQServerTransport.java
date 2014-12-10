@@ -72,7 +72,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 			try {
 				Socket socket = serverSocket.accept();
 				socketList.add(socket);
-				new Thread(new TcpReceiveThread(socket, sugarQueueManager)).start();
+				new Thread(new TcpReceiveThread(sugarQueueManager, this)).start();
 				
 			} catch (IOException e) {
 				logger.error("TcpSugarMQServerTransport启动失败：", e);

@@ -3,9 +3,9 @@
  */
 package com.sugarmq.transport.tcp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jms.Message;
@@ -13,10 +13,9 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.SugarMQConstant.MessageType;
+import com.sugarmq.constant.MessageType;
 import com.sugarmq.message.bean.SugarMessage;
 import com.sugarmq.transport.MessageDispatcher;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 
 
 /**
@@ -51,7 +50,7 @@ public class TcpMessageTransportReceiveThread implements Runnable{
 					continue;
 				}
 				
-				objectInputStream = new ObjectInputStream(new ByteInputStream(objectByte, byteNum));
+				objectInputStream = new ObjectInputStream(new ByteArrayInputStream(objectByte, 0, byteNum));
 				rcvMsgObj = objectInputStream.readObject();
 				
 				if(!(rcvMsgObj instanceof Message)) {

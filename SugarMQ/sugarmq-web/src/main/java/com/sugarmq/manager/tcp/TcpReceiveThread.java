@@ -3,6 +3,7 @@
  */
 package com.sugarmq.manager.tcp;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,10 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.sugarmq.constant.SugarMQConstant.MessageType;
+import com.sugarmq.constant.MessageType;
 import com.sugarmq.manager.SugarMQQueueManager;
 import com.sugarmq.transport.tcp.TcpMessageTransport;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
 
 /**
  * 服务端消息接收线程
@@ -27,14 +28,14 @@ import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 public class TcpReceiveThread implements Runnable{
 	private Socket socket;
 	private SugarMQQueueManager sugarQueueManager;
-	private TcpMessageTransport tcpMessageTransport;
+	private TcpSugarMQServerTransport tcpSugarMQServerTransport;
 	private byte[] objectByte = new byte[com.sugarmq.message.Message.OBJECT_BYTE_SIZE];
 	
 	private static Logger logger = LoggerFactory.getLogger(TcpReceiveThread.class);
 	
-	public TcpReceiveThread(SugarMQQueueManager sugarQueueManager, TcpMessageTransport tcpMessageTransport) {
+	public TcpReceiveThread(SugarMQQueueManager sugarQueueManager, TcpSugarMQServerTransport tcpSugarMQServerTransport) {
 		this.sugarQueueManager = sugarQueueManager;
-		this.tcpMessageTransport = tcpMessageTransport;
+		this.tcpSugarMQServerTransport = tcpSugarMQServerTransport;
 	}
 	
 	@Override
@@ -55,7 +56,7 @@ public class TcpReceiveThread implements Runnable{
 					continue;
 				}
 				
-				objectInputStream = new ObjectInputStream(new ByteInputStream(objectByte, byteNum));
+				objectInputStream = new ObjectInputStream(new ByteArrayInputStream(objectByte, 0, byteNum));
 				rcvMsgObj = objectInputStream.readObject();
 				
 				if(!(rcvMsgObj instanceof Message)) {

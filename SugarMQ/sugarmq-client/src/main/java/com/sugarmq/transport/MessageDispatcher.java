@@ -13,7 +13,7 @@ import javax.jms.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.SugarMQConstant.MessageDispatchType;
+import com.sugarmq.constant.MessageDispatchType;
 import com.sugarmq.transport.tcp.TcpMessageTransport;
 
 /**

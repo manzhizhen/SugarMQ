@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.sugarmq.constant.SugarMQConstant.MessageProperty;
+import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.manager.tcp.TcpDispatchThread;
 import com.sugarmq.message.bean.SugarMessage;
 import com.sugarmq.queue.SugarMQQueue;
