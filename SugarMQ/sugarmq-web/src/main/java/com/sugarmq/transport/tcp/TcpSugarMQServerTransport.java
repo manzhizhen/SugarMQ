@@ -9,7 +9,9 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -18,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.sugarmq.manager.SugarMQQueueManager;
@@ -29,56 +30,48 @@ import com.sugarmq.transport.SugarMQServerTransport;
  * @author manzhizhen
  * 
  */
-@Scope("prototype")
 @Component
 public class TcpSugarMQServerTransport implements SugarMQServerTransport {
-	private InetAddress inetAddress;
-	private int port;
-	private @Value("${transport-backlog}") int backlog;
-	private ServerSocket serverSocket;
 	@Autowired
 	private SugarMQQueueManager sugarQueueManager;
 	
-	private CopyOnWriteArrayList<Socket> socketList = new CopyOnWriteArrayList<Socket>();
+	private Socket socket;
+	
+	// 收消息的队列
+	private LinkedBlockingQueue<Message> receiveMessageQueue = new LinkedBlockingQueue<Message>();
+	// 发消息的队列
+	private LinkedBlockingQueue<Message> sendMessageQueue = new LinkedBlockingQueue<Message>();
 	
 	private Logger logger = LoggerFactory.getLogger(TcpSugarMQServerTransport.class);
-
-	public void setInetAddress(InetAddress inetAddress) {
-		this.inetAddress = inetAddress;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	@Override
-	public void bind() throws JMSException {
-		if(inetAddress == null) {
-			throw new JMSException("inetAddress地址为空，无法绑定端口！");
+	
+	public TcpSugarMQServerTransport(Socket socket) {
+		if(socket == null) {
+			logger.error("Socket对象不能为空！");
+			throw new IllegalArgumentException("Socket不能为空！");
 		}
 		
-		try {
-			serverSocket = new ServerSocket(port, backlog, inetAddress);
-		} catch (IOException e) {
-			logger.error("ServerSocket初始化失败：{}", e);
-			throw new JMSException(String.format("TcpSugarMQServerTransport绑定URI出错：【%s】【%s】【%s】", 
-					new Object[]{inetAddress, port, e.getMessage()}));
-		}
+		this.socket = socket;
 	}
-
+	
 	@Override
 	public void start() throws JMSException {
-		while(true) {
-			try {
-				Socket socket = serverSocket.accept();
-				socketList.add(socket);
-				new Thread(new TcpReceiveThread(sugarQueueManager, this)).start();
-				
-			} catch (IOException e) {
-				logger.error("TcpSugarMQServerTransport启动失败：", e);
-				throw new JMSException(e.getMessage());
-			}
+		if(socket.isClosed()) {
+			logger.error("Socket已经关闭，TcpSugarMQServerTransport开启失败！");
+			throw new JMSException("Socket已经关闭，TcpSugarMQServerTransport开启失败！");
 		}
+		
+		if(!socket.isConnected()) {
+			logger.error("Socket未连接，TcpSugarMQServerTransport开启失败！");
+			throw new JMSException("Socket未连接，TcpSugarMQServerTransport开启失败！");
+		}
+		
+		if(!socket.isInputShutdown()) {
+			new Thread().start();
+		} else {
+			logger.debug("Socket未连接，TcpSugarMQServerTransport开启失败！");
+		}
+		
+	
 	}
 
 	/**
@@ -90,7 +83,6 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	public void sendMessage(Message message, Socket socket) throws JMSException {
 		if(socket.isClosed()) {
 			logger.info("该socket已经关闭，发送消息失败【{}】", message);
-			socketList.remove(socket);
 			return ;
 		}
 		
@@ -138,6 +130,16 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	public void closed() throws JMSException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public BlockingQueue<Message> getReceiveMessageQueue() {
+		return receiveMessageQueue;
+	}
+
+	@Override
+	public BlockingQueue<Message> getSendMessageQueue() {
+		return sendMessageQueue;
 	}
 	
 	
