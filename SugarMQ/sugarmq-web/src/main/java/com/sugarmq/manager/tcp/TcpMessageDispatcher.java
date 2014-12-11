@@ -23,7 +23,7 @@ import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
  * @author manzhizhen
  *
  */
-public class TcpDispatchThread implements Runnable{
+public class TcpMessageDispatcher {
 
 //	private List<Socket> socketList = new CopyOnWriteArrayList<Socket>();
 	// key-客户端消费者ID value-Socket
@@ -34,9 +34,9 @@ public class TcpDispatchThread implements Runnable{
 	@Autowired
 	private TcpSugarMQServerTransport tcpSugarMQServerTransport;
 	
-	private static Logger logger = LoggerFactory.getLogger(TcpDispatchThread.class);
+	private static Logger logger = LoggerFactory.getLogger(TcpMessageDispatcher.class);
 	
-	public TcpDispatchThread(SugarMQQueue queue) {
+	public TcpMessageDispatcher(SugarMQQueue queue) {
 		this.queue = queue;
 	}
 	

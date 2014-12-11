@@ -13,7 +13,8 @@ package com.sugarmq.constant;
  */
 public enum MessageType {
 	PRODUCER_MESSAGE("PRODUCER_MESSAGE"),	// 生产者发送的消息
-	CUSTOMER_ACKNOWLEDGE_MESSAGE("CUSTOMER_ACKNOWLEDGE_MESSAGE");	// 消费者应答消息
+	CUSTOMER_ACKNOWLEDGE_MESSAGE("CUSTOMER_ACKNOWLEDGE_MESSAGE"),	// 消费者应答消息
+	CUSTOMER_REGISTER_MESSAGE("CUSTOMER_REGISTER_MESSAGE");	// 消费者注册消息
 	
 	String value;
 	private MessageType(String value) {

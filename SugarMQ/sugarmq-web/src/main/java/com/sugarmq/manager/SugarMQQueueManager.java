@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.sugarmq.constant.MessageProperty;
-import com.sugarmq.manager.tcp.TcpDispatchThread;
+import com.sugarmq.manager.tcp.TcpMessageDispatcher;
 import com.sugarmq.message.bean.SugarMessage;
 import com.sugarmq.queue.SugarMQQueue;
 import com.sugarmq.queue.SugarQueue;
@@ -36,19 +36,19 @@ public class SugarMQQueueManager {
 	// 消息队列
 	private Map<String, SugarMQQueue> queueMap;
 	// 消息队列分发线程
-	private Map<String, TcpDispatchThread> queueDispatchThreadMap;
+	private Map<String, TcpMessageDispatcher> queueDispatchThreadMap;
 //	// 消息队列的发送端连接
 //	private Map<String, ConcurrentLinkedQueue<SocketChannel>> queueSenderMap;
 	// 消息队列的接收端连接
-	private Map<String, ConcurrentLinkedQueue<SocketChannel>> queueReceiverMap;
+//	private Map<String, ConcurrentLinkedQueue<SocketChannel>> queueReceiverMap;
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQQueueManager.class);
 	
 	public void init() {
 		queueMap = new ConcurrentHashMap<String, SugarMQQueue>();
-		queueDispatchThreadMap = new ConcurrentHashMap<String, TcpDispatchThread>();
+		queueDispatchThreadMap = new ConcurrentHashMap<String, TcpMessageDispatcher>();
 //		queueSenderMap = new ConcurrentHashMap<String, ConcurrentLinkedQueue<SocketChannel>>(10);
-		queueReceiverMap = new ConcurrentHashMap<String, ConcurrentLinkedQueue<SocketChannel>>();
+//		queueReceiverMap = new ConcurrentHashMap<String, ConcurrentLinkedQueue<SocketChannel>>();
 	}
 	
 	/**
@@ -67,7 +67,7 @@ public class SugarMQQueueManager {
 			if (!queueMap.containsKey(queueName)) {
 				queue = new SugarMQQueue(queueName);
 				// 创建分发该队列的线程
-				TcpDispatchThread tcpDispatchThread = new TcpDispatchThread(queue);
+				TcpMessageDispatcher tcpDispatchThread = new TcpMessageDispatcher(queue);
 				queueMap.put(queueName, queue);
 				queueDispatchThreadMap.put(queueName, tcpDispatchThread);
 				new Thread(tcpDispatchThread).start();

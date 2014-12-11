@@ -32,6 +32,7 @@ public class TcpSugarMQTransprotCenter {
 	private ServerSocket serverSocket;
 	private ConcurrentHashMap<Socket, TcpSugarMQServerTransport> transprotMap = 
 			new ConcurrentHashMap<Socket, TcpSugarMQServerTransport>();
+	
 	private @Value("${transport-backlog}") int backlog;
 	
 	private Logger logger = LoggerFactory.getLogger(TcpSugarMQTransprotCenter.class);
@@ -55,15 +56,17 @@ public class TcpSugarMQTransprotCenter {
 					new Object[]{inetAddress, port, e.getMessage()}));
 		}
 		
+		TcpSugarMQServerTransport tcpSugarMQServerTransport = null;
+		Socket socket = null;
 		while(true) {
 			try {
-				Socket socket = serverSocket.accept();
-				socketList.add(socket);
-				new Thread(new TcpReceiveThread(sugarQueueManager, this)).start();
-				
+				socket = serverSocket.accept();
+				tcpSugarMQServerTransport = new TcpSugarMQServerTransport(socket);
+				tcpSugarMQServerTransport.start();
+				transprotMap.put(socket, tcpSugarMQServerTransport);
+//				new Thread(new TcpReceiveThread(sugarQueueManager, this)).start();
 			} catch (IOException e) {
 				logger.error("TcpSugarMQServerTransport启动失败：", e);
-				throw new JMSException(e.getMessage());
 			}
 		}
 	}
