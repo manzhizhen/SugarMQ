@@ -1,24 +1,23 @@
 package com.sugarmq.manager;
 
-import java.nio.channels.SocketChannel;
-import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.jms.DeliveryMode;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.Topic;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.sugarmq.constant.MessageContainerType;
 import com.sugarmq.constant.MessageProperty;
-import com.sugarmq.manager.tcp.TcpMessageDispatcher;
 import com.sugarmq.message.bean.SugarMessage;
-import com.sugarmq.queue.SugarMQQueue;
+import com.sugarmq.queue.SugarMQMessageContainer;
 import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.util.MessageIdGenerate;
 
@@ -29,90 +28,58 @@ import com.sugarmq.util.MessageIdGenerate;
  * 
  */
 @Component
-public class SugarMQQueueManager {
+public class SugarMQMessageManager {
 	private @Value("${max_queue_message_num}")int MAX_QUEUE_MESSAGE_CAPACITY; // 队列中所能容纳的消息最大数
 	private @Value("${max_queue_num}")int MAX_QUEUE_NUM; // 队列数量的最大值
 
 	// 消息队列
-	private Map<String, SugarMQQueue> queueMap;
-	// 消息队列分发线程
-	private Map<String, TcpMessageDispatcher> queueDispatchThreadMap;
-//	// 消息队列的发送端连接
-//	private Map<String, ConcurrentLinkedQueue<SocketChannel>> queueSenderMap;
-	// 消息队列的接收端连接
-//	private Map<String, ConcurrentLinkedQueue<SocketChannel>> queueReceiverMap;
+	private ConcurrentHashMap<String, SugarMQMessageContainer> messageContainerMap = 
+			new ConcurrentHashMap<String, SugarMQMessageContainer>();
 	
-	private Logger logger = LoggerFactory.getLogger(SugarMQQueueManager.class);
-	
-	public void init() {
-		queueMap = new ConcurrentHashMap<String, SugarMQQueue>();
-		queueDispatchThreadMap = new ConcurrentHashMap<String, TcpMessageDispatcher>();
-//		queueSenderMap = new ConcurrentHashMap<String, ConcurrentLinkedQueue<SocketChannel>>(10);
-//		queueReceiverMap = new ConcurrentHashMap<String, ConcurrentLinkedQueue<SocketChannel>>();
-	}
-	
-	/**
-	 * 新增一个队列 如果队列已经存在，则忽略
-	 * @param queueName
-	 */
-	private SugarMQQueue addQueue(SugarQueue sugarQueue) throws JMSException{
-		String queueName = sugarQueue.getQueueName();
-		if (StringUtils.isBlank(queueName)) {
-			logger.warn("队列名称不能为空！");
-			throw new JMSException("队列名称不能为空！");
-		}
-		
-		SugarMQQueue queue = null;
-		synchronized (queueMap) {
-			if (!queueMap.containsKey(queueName)) {
-				queue = new SugarMQQueue(queueName);
-				// 创建分发该队列的线程
-				TcpMessageDispatcher tcpDispatchThread = new TcpMessageDispatcher(queue);
-				queueMap.put(queueName, queue);
-				queueDispatchThreadMap.put(queueName, tcpDispatchThread);
-				new Thread(tcpDispatchThread).start();
-			}
-			
-			if (queueMap.size() >= MAX_QUEUE_NUM) {
-				logger.warn("MOM中队列数已满，添加队列失败:{}", queueName);
-				throw new JMSException("MOM中队列数已满，添加队列失败:{}", queueName);
-			}
-		}
-		
-		return queue;
-	}
+	private Logger logger = LoggerFactory.getLogger(SugarMQMessageManager.class);
 	
 	/**
 	 * 将一个消息放入队列中
 	 * @param message
 	 */
-	private void addMessage(Message message) throws JMSException{
+	public void addMessage(Message message) throws JMSException{
 		// 如果是持久化消息，需要将消息持久化。
 		if(DeliveryMode.PERSISTENT == message.getJMSDeliveryMode()) {
 			logger.info("持久化消息:{}", message);
 			persistentMessage(message);
 		}
 		
-		// 将消息放入消息队列
-		SugarQueue sugarQueue = (SugarQueue) message.getJMSDestination();
-		SugarMQQueue queue = queueMap.get(sugarQueue.getQueueName());
-		if(queue == null) {
-			logger.info("新增队列:{}", sugarQueue);
-			queue = addQueue(sugarQueue);
+		Destination destination = message.getJMSDestination();
+		if(destination instanceof Queue) {
+			logger.debug("队列消息【{}】", message);
+			
+			// 将消息放入消息队列
+			String name = ((javax.jms.Queue) destination).getQueueName();
+			SugarMQMessageContainer queue = messageContainerMap.putIfAbsent(name, new SugarMQMessageContainer(name, 
+					MessageContainerType.QUEUE.getValue()));
+			
+			if (messageContainerMap.size() >= MAX_QUEUE_NUM) {
+				logger.warn("MOM中队列数已满，添加队列失败:【{}】", name);
+				throw new JMSException("MOM中队列数已满，添加队列失败:【{}】", name);
+			}
+			
+			queue.putMessage(message);
+			logger.debug("将消息放入分发队列:【{}】", message);
+			
+			
+		} else if(destination instanceof Topic) {
+			logger.debug("主题消息【{}】", message);
 		}
-		
-		logger.debug("将消息放入分发队列:{}", message);
-		queue.putMessage(message);
 	}
 	
 	/**
 	 * 将一个消息从消息队列中移除
 	 * @param message
 	 */
-	private void removeMessage(Message message) throws JMSException{
+	public void removeMessage(Message message) throws JMSException{
 		// 将消息放入消息队列
 		SugarQueue sugarQueue = (SugarQueue) message.getJMSDestination();
-		SugarMQQueue queue = queueMap.get(sugarQueue.getQueueName());
+		SugarMQMessageContainer queue = messageContainerMap.get(sugarQueue.getQueueName());
 		
 		if(queue != null) {
 			queue.removeMessage(message);

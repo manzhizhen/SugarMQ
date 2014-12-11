@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.sugarmq.constant.MessageType;
-import com.sugarmq.manager.SugarMQQueueManager;
+import com.sugarmq.manager.SugarMQMessageManager;
 import com.sugarmq.transport.tcp.TcpMessageTransport;
 import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
 
@@ -27,13 +27,13 @@ import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
  */
 public class TcpReceiveThread implements Runnable{
 	private Socket socket;
-	private SugarMQQueueManager sugarQueueManager;
+	private SugarMQMessageManager sugarQueueManager;
 	private TcpSugarMQServerTransport tcpSugarMQServerTransport;
 	private byte[] objectByte = new byte[com.sugarmq.message.Message.OBJECT_BYTE_SIZE];
 	
 	private static Logger logger = LoggerFactory.getLogger(TcpReceiveThread.class);
 	
-	public TcpReceiveThread(SugarMQQueueManager sugarQueueManager, TcpSugarMQServerTransport tcpSugarMQServerTransport) {
+	public TcpReceiveThread(SugarMQMessageManager sugarQueueManager, TcpSugarMQServerTransport tcpSugarMQServerTransport) {
 		this.sugarQueueManager = sugarQueueManager;
 		this.tcpSugarMQServerTransport = tcpSugarMQServerTransport;
 	}

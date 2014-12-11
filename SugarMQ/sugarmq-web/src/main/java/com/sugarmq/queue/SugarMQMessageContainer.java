@@ -9,29 +9,52 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Queue;
+import javax.jms.Topic;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.constant.MessageContainerType;
+
 /**
- * 队列
+ * 队列和主题的消息容器
  * 
  * @author manzhizhen
  *
  */
-public class SugarMQQueue implements Queue{
+public class SugarMQMessageContainer implements Queue, Topic{
 	private String name;
+	private String type;
 	private LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
 	
-	private static Logger logger = LoggerFactory.getLogger(SugarMQQueue.class);
+	private static Logger logger = LoggerFactory.getLogger(SugarMQMessageContainer.class);
 	
-	public SugarMQQueue(String name) {
+	public SugarMQMessageContainer(String name, String type) {
+		if(StringUtils.isBlank(name) || StringUtils.isBlank(type)) {
+			throw new IllegalArgumentException();
+		}
+		
 		this.name = name;
+		this.type = type;
+	}
+	
+	@Override
+	public String getTopicName() throws JMSException {
+		return name;
 	}
 	
 	@Override
 	public String getQueueName() throws JMSException {
 		return name;
+	}
+	
+	public boolean isQueue() {
+		return MessageContainerType.QUEUE.getValue().equals(type);
+	}
+	
+	public boolean isTopic() {
+		return MessageContainerType.TOPIC.getValue().equals(type);
 	}
 	
 	/**
@@ -75,6 +98,8 @@ public class SugarMQQueue implements Queue{
 	public void removeMessage(Message message) {
 		
 	}
+
+
 	
 
 }

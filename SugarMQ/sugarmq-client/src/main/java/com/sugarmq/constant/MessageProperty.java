@@ -10,7 +10,9 @@ package com.sugarmq.constant;
  */
 public enum MessageProperty {
 	DISABLE_MESSAGE_ID("_#_disableMessageId", false),
-	SESSION_ID("_#_sessionId", null);
+	SESSION_ID("_#_sessionId", null),
+	MESSAGE_TYPE("_#_messageType", null),
+	CUSTOMER_ID("_#_customerId", null);
 	
 	String key;
 	Object value;

@@ -36,7 +36,7 @@ public class SugarMQServerManager {
 	String uri;
 	
 	@Autowired
-	private SugarMQQueueManager sugarQueueManager;
+	private SugarMQMessageManager sugarQueueManager;
 	@Autowired
 	private ConnectionPoolManager connectionPoolManager;
 	@Autowired
