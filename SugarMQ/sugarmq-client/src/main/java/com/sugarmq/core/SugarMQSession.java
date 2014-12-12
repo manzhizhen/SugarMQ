@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageProperty;
-import com.sugarmq.message.bean.SugarTextMessage;
+import com.sugarmq.message.bean.SugarMQTextMessage;
 import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.queue.SugarQueueReceiver;
 import com.sugarmq.queue.SugarQueueSender;
@@ -183,13 +183,13 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 
 	@Override
 	public TextMessage createTextMessage() throws JMSException {
-		SugarTextMessage sugarTextMessage = new SugarTextMessage();
+		SugarMQTextMessage sugarTextMessage = new SugarMQTextMessage();
 		return sugarTextMessage;
 	}
 
 	@Override
 	public TextMessage createTextMessage(String message) throws JMSException {
-		SugarTextMessage sugarTextMessage = new SugarTextMessage(message);
+		SugarMQTextMessage sugarTextMessage = new SugarMQTextMessage(message);
 		sugarTextMessage.setStringProperty(MessageProperty.SESSION_ID.getKey(), sessionId);
 		return sugarTextMessage;
 	}

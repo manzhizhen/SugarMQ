@@ -6,10 +6,10 @@ import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
-public class SugarBytesMessage extends SugarMessage implements BytesMessage {
+public class SugarMQBytesMessage extends SugarMQMessage implements BytesMessage {
 	private static final long serialVersionUID = -8641306528891219928L;
 
-	public SugarBytesMessage() {
+	public SugarMQBytesMessage() {
 		super();
 	}
 	

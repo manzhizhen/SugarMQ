@@ -5,11 +5,11 @@ import java.util.Enumeration;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 
-public class SugarMapMessage extends SugarMessage implements MapMessage{
+public class SugarMQMapMessage extends SugarMQMessage implements MapMessage{
 	/**
 	 * @param sugarMQTransport
 	 */
-	public SugarMapMessage() {
+	public SugarMQMapMessage() {
 		super();
 	}
 

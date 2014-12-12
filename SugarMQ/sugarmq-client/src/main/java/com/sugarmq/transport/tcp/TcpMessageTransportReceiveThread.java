@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageType;
-import com.sugarmq.message.bean.SugarMessage;
+import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.transport.MessageDispatcher;
 
 
@@ -62,7 +62,7 @@ public class TcpMessageTransportReceiveThread implements Runnable{
 //				receiveMessageQueue.put(message);
 				messageDispatch.dispatchOneMessage(message);
 				
-				Message acknowledgeMsg = new SugarMessage();
+				Message acknowledgeMsg = new SugarMQMessage();
 				acknowledgeMsg.setJMSMessageID(message.getJMSMessageID());
 				acknowledgeMsg.setJMSType(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue());	// 设置消息类型
 				// 接收消息应答

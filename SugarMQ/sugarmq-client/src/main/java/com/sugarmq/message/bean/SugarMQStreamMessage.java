@@ -8,11 +8,11 @@ import javax.jms.StreamMessage;
 
 import com.sugarmq.transport.SugarMQTransport;
 
-public class SugarStreamMessage extends SugarMessage implements StreamMessage {
+public class SugarMQStreamMessage extends SugarMQMessage implements StreamMessage {
 	/**
 	 * @param sugarMQTransport
 	 */
-	public SugarStreamMessage() {
+	public SugarMQStreamMessage() {
 		super();
 	}
 

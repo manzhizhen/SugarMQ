@@ -4,16 +4,16 @@ package com.sugarmq.message.bean;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 
-public class SugarTextMessage extends SugarMessage implements TextMessage {
+public class SugarMQTextMessage extends SugarMQMessage implements TextMessage {
 	private static final long serialVersionUID = 630846251491739491L;
 	
 	private String textMessage;
 	
-	public SugarTextMessage() {
+	public SugarMQTextMessage() {
 		super();
 	}
 	
-	public SugarTextMessage(String textMessage) {
+	public SugarMQTextMessage(String textMessage) {
 		super();
 		this.textMessage = textMessage;
 	}

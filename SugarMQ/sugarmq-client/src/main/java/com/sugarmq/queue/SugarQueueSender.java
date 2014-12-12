@@ -14,7 +14,7 @@ import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.core.SugarMessageProducer;
 import com.sugarmq.message.SugarDestination;
-import com.sugarmq.message.bean.SugarMessage;
+import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.transport.SugarMQTransport;
 
 public class SugarQueueSender extends SugarMessageProducer implements QueueSender {

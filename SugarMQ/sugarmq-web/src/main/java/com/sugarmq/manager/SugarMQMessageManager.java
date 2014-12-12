@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.sugarmq.constant.MessageContainerType;
 import com.sugarmq.constant.MessageProperty;
-import com.sugarmq.message.bean.SugarMessage;
+import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.queue.SugarMQMessageContainer;
 import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.util.MessageIdGenerate;
@@ -134,7 +134,7 @@ public class SugarMQMessageManager {
 		// 添加消息
 		addMessage(message);
 		
-		Message acknowledgeMessage = new SugarMessage();
+		Message acknowledgeMessage = new SugarMQMessage();
 		acknowledgeMessage.setJMSMessageID(clientMessageId);
 		
 		return acknowledgeMessage;

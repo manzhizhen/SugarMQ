@@ -7,11 +7,11 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 
-public class SugarObjectMessage extends SugarMessage implements ObjectMessage {
+public class SugarMQObjectMessage extends SugarMQMessage implements ObjectMessage {
 	/**
 	 * @param sugarMQTransport
 	 */
-	public SugarObjectMessage() {
+	public SugarMQObjectMessage() {
 		super();
 	}
 

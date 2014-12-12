@@ -4,10 +4,10 @@ import javax.jms.JMSException;
 
 import com.sugarmq.message.Message;
 
-public class SugarMessage extends Message{
+public class SugarMQMessage extends Message{
 	private static final long serialVersionUID = 4608888574237220597L;
 
-	public SugarMessage() {
+	public SugarMQMessage() {
 		super();
 	}
 	
