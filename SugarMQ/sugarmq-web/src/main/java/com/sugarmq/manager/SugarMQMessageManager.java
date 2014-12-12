@@ -82,15 +82,16 @@ public class SugarMQMessageManager {
 		SugarMQMessageContainer queue = messageContainerMap.get(sugarQueue.getQueueName());
 		
 		if(queue != null) {
+			// 如果是持久化消息，需要将消息持久化。
+			if(DeliveryMode.PERSISTENT == message.getJMSDeliveryMode()) {
+				removePersistentMessage(message);
+			}
+			
 			queue.removeMessage(message);
 		} else {
 			logger.error("不存在的队列名称【{}】，移除消息{}失败！", sugarQueue.getQueueName(), message);
 		}
 		
-		// 如果是持久化消息，需要将消息持久化。
-		if(DeliveryMode.PERSISTENT == message.getJMSDeliveryMode()) {
-			removePersistentMessage(message);
-		}
 	}
 	
 	/**

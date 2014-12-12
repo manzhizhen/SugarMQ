@@ -27,9 +27,6 @@ public class SugarMQServerManager {
 			.getLogger(SugarMQServerManager.class);
 
 	private AtomicBoolean START_STATUS = new AtomicBoolean(false);
-//	private final static int OBJECT_BYTE_SIZE = 999999;
-
-	// private final static ForkJoinPool forkJoinPool = new ForkJoinPool();
 	private ExecutorService executorService;
 
 	private @Value("${server_uri}")
@@ -44,10 +41,6 @@ public class SugarMQServerManager {
 	
 	private SugarMQServerTransport sugarMQServerTransport;
 
-	// private static ByteBuffer objByteBuffer = ByteBuffer.allocate(99999);
-	// private static ServerSocketChannel serverSocketChannel;
-	// private static Selector selector;
-
 	/**
 	 * 启动Sugar提供者
 	 * @throws JMSException 
@@ -58,11 +51,10 @@ public class SugarMQServerManager {
 			return;
 		}
 
-		sugarQueueManager.init();
 		connectionPoolManager.init();
 		sugarMQServerTransport = sugarMQServerTransportFactory
 				.createSugarMQTransport(uri);
-		sugarMQServerTransport.bind();
+		sugarMQServerTransport.start();
 
 		// 创建和JVM进程可用内核数一样的线程数
 		executorService = Executors.newFixedThreadPool(Runtime.getRuntime()

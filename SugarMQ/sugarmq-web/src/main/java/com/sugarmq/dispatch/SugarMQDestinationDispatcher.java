@@ -1,12 +1,9 @@
 /**
  * 
  */
-package com.sugarmq.queue;
+package com.sugarmq.dispatch;
 
-import java.net.Socket;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -16,31 +13,36 @@ import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
+import com.sugarmq.manager.SugarMQCustomerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
 import com.sugarmq.message.bean.SugarMQBytesMessage;
 
 /**
- * 分发消息线程
- * 每个队列有一个该线程负责分发消息
+ * 消息目的地分发器
+ * 每个Transprot连接器配置一个该分发器来分发消息到目的地
  * @author manzhizhen
  *
  */
 public class SugarMQDestinationDispatcher {
 	private BlockingQueue<Message> receiveMessageQueue;
-	private BlockingQueue<Message> answerMessageQueue;
+	private BlockingQueue<Message> sendMessageQueue;
 	private SugarMQMessageManager sugarMQMessageManager;
+	private SugarMQCustomerManager sugarMQCustomerManager;
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQDestinationDispatcher.class);
 	
 	public SugarMQDestinationDispatcher(BlockingQueue<Message> receiveMessageQueue, 
-			BlockingQueue<Message> answerMessageQueue, SugarMQMessageManager sugarMQMessageManager) {
-		if(receiveMessageQueue == null || answerMessageQueue == null || sugarMQMessageManager == null) {
+			BlockingQueue<Message> sendMessageQueue, SugarMQMessageManager sugarMQMessageManager, 
+			SugarMQCustomerManager sugarMQCustomerManager) {
+		if(receiveMessageQueue == null || sendMessageQueue == null || sugarMQMessageManager == null
+				|| sugarMQCustomerManager == null) {
 			throw new IllegalArgumentException();
 		}
 		
 		this.receiveMessageQueue = receiveMessageQueue;
-		this.answerMessageQueue = answerMessageQueue;
+		this.sendMessageQueue = sendMessageQueue;
 		this.sugarMQMessageManager = sugarMQMessageManager;
+		this.sugarMQCustomerManager = sugarMQCustomerManager;
 	}
 	
 	public void start() {
@@ -67,7 +69,7 @@ public class SugarMQDestinationDispatcher {
 							MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
 					answerMessage.setJMSMessageID(message.getJMSMessageID());
 					try {
-						answerMessageQueue.put(answerMessage);
+						sendMessageQueue.put(answerMessage);
 					} catch (InterruptedException e) {
 						logger.info("SugarMQQueueDispatcher被中断，即将退出.");
 					}
@@ -80,7 +82,7 @@ public class SugarMQDestinationDispatcher {
 				// 消费者注册消息
 				} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
 						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
-					sugarMQMessageManager.removeMessage(message);
+					sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
 					
 				} else {
 					logger.error("未知消息类型，无法处理【{}】", message);
