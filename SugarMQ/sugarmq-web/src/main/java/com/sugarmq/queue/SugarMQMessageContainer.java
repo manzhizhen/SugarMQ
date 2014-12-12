@@ -26,7 +26,11 @@ import com.sugarmq.constant.MessageContainerType;
 public class SugarMQMessageContainer implements Queue, Topic{
 	private String name;
 	private String type;
+	
+	// 待发送消息队列
 	private LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
+	// 已发送的消息队列
+	private LinkedBlockingQueue<Message> consumeMessageQueue = new LinkedBlockingQueue<Message>();
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQMessageContainer.class);
 	
@@ -96,7 +100,7 @@ public class SugarMQMessageContainer implements Queue, Topic{
 	 * @param message
 	 */
 	public void removeMessage(Message message) {
-		
+		consumeMessageQueue.remove(message);
 	}
 
 

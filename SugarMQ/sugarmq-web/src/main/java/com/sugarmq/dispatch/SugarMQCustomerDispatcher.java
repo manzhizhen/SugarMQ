@@ -40,4 +40,8 @@ public class SugarMQCustomerDispatcher {
 		
 		this.sugarMQMessageContainer = sugarMQMessageContainer;
 	}
+	
+	public void start() {
+		
+	}
 }

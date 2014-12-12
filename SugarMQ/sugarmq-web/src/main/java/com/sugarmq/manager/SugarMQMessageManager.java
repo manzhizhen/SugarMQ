@@ -64,6 +64,7 @@ public class SugarMQMessageManager {
 			}
 			
 			queue.putMessage(message);
+			message.setJMSDestination(queue);
 			logger.debug("将消息放入分发队列:【{}】", message);
 			
 			
