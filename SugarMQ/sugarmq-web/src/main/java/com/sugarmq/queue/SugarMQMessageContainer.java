@@ -102,8 +102,4 @@ public class SugarMQMessageContainer implements Queue, Topic{
 	public void removeMessage(Message message) {
 		consumeMessageQueue.remove(message);
 	}
-
-
-	
-
 }

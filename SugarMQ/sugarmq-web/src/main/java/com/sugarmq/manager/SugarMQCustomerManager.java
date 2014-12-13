@@ -56,7 +56,7 @@ public class SugarMQCustomerManager {
 		}
 		
 		String customerId = message.getStringProperty(MessageProperty.CUSTOMER_ID.getKey());
-		if(StringUtils.isBlank(customerId)) {
+		if(StringUtils.isBlank(customerId) || customerMap.containsKey(customerId)) {
 			logger.debug("客户端没有填写消费者ID【{}】", message);
 			customerId = getNewCustomerId();
 		}
