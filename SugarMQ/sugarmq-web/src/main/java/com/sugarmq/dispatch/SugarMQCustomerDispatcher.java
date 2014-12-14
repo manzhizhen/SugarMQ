@@ -3,6 +3,9 @@
  */
 package com.sugarmq.dispatch;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +53,16 @@ public class SugarMQCustomerDispatcher {
 		thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
+				Message message = null;
+				while(true) {
+					try {
+						message = sugarMQMessageContainer.takeMessage();
+						sugarMQCustomerManager.putMessageToCustomerQueue(message);
+					} catch (JMSException e) {
+						logger.info("SugarMQCustomerDispatcher被中断！");
+						break ;
+					}
+				}
 				
 			}
 		});

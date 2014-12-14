@@ -9,7 +9,6 @@ import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.JMSException;
@@ -84,9 +83,10 @@ public class SugarMQCustomerManager {
 		String nextCustomerId = ergodicArray.getNext();
 		
 		BlockingQueue<Message> queue = customerMap.get(nextCustomerId);
-		
+		message.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), nextCustomerId);
 		try {
 			queue.put(message);
+			destinationMap.get(sugarMQMessageContainer.getQueueName()).setValue(nextCustomerId, false);
 			logger.debug("成功将消息【{}】推送到消费者【{}】队列！", message, nextCustomerId);
 		} catch (InterruptedException e) {
 			logger.error("将消息【{}】推送到消费者【{}】队列失败！", message, nextCustomerId);
@@ -124,7 +124,7 @@ public class SugarMQCustomerManager {
 	 */
 	class ErgodicArray<T> {
 		// Boolean表示该消费者是否已经准备好接收消息
-		private CopyOnWriteArrayList<Map.Entry<T, Boolean>> contentArray = new CopyOnWriteArrayList<Map.Entry<T, Boolean>>();
+		private CopyOnWriteArrayList<Entry<T, Boolean>> contentArray = new CopyOnWriteArrayList<Entry<T, Boolean>>();
 		private int index = 0;
 		private ReentrantLock lock = new ReentrantLock();
 		
@@ -167,6 +167,15 @@ public class SugarMQCustomerManager {
 		
 		public boolean isEmpty() {
 			return contentArray.isEmpty();
+		}
+		
+		public void setValue(T t, Boolean isIdle) {
+			for(Entry<T, Boolean> entry : contentArray) {
+				if(entry.getKey().equals(t)) {
+					entry.setValue(isIdle);
+					break ;
+				}
+			}
 		}
 		
 		private class Entry<K,V> implements Map.Entry<K, V> {
