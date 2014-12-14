@@ -4,10 +4,12 @@
 package com.sugarmq.manager;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.JMSException;
@@ -121,32 +123,40 @@ public class SugarMQCustomerManager {
 	 * 2014年12月12日
 	 */
 	class ErgodicArray<T> {
-		private CopyOnWriteArrayList<T> contentArray = new CopyOnWriteArrayList<T>();
+		// Boolean表示该消费者是否已经准备好接收消息
+		private CopyOnWriteArrayList<Map.Entry<T, Boolean>> contentArray = new CopyOnWriteArrayList<Map.Entry<T, Boolean>>();
 		private int index = 0;
 		private ReentrantLock lock = new ReentrantLock();
 		
 		public T getNext() {
 			lock.lock();
-			while(!contentArray.isEmpty());
 			
-			lock.lock();
-			if(index >= contentArray.size()) {
-				index = 0;
-			}
-			
-			T t = contentArray.get(index);
-			index++;
-			if(index >= contentArray.size()) {
-				index = 0;
+			Entry<T, Boolean> entry = null;
+			while(true) {
+				
+				if(contentArray.isEmpty()) {
+					continue ;
+				}
+				
+				if(index >= contentArray.size()) {
+					index = 0;
+				}
+				
+				entry = (Entry<T, Boolean>) contentArray.get(index);
+				index++;
+				if(entry.getValue()) {
+					break ;
+					
+				}
 			}
 			
 			lock.unlock();
 			
-			return t;
+			return entry.getKey();
 		}
 		
 		public void add(T t) {
-			contentArray.addIfAbsent(t);
+			contentArray.addIfAbsent(new Entry<T, Boolean>(t, new Boolean(true)));
 		}
 		
 		public void remove(T t) {
@@ -157,6 +167,32 @@ public class SugarMQCustomerManager {
 		
 		public boolean isEmpty() {
 			return contentArray.isEmpty();
+		}
+		
+		private class Entry<K,V> implements Map.Entry<K, V> {
+			private K key;
+			private V value;
+			
+			public Entry(K key, V value) {
+				this.key = key;
+				this.value = value;
+			}
+			
+			@Override
+			public K getKey() {
+				return key;
+			}
+			
+			@Override
+			public V getValue() {
+				return value;
+			}
+			
+			@Override
+			public V setValue(V value) {
+				this.value = value;
+				return this.value;
+			}
 		}
 	}
 }
