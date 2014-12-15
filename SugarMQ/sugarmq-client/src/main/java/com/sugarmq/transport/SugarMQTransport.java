@@ -3,6 +3,8 @@
  */
 package com.sugarmq.transport;
 
+import java.util.concurrent.BlockingQueue;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 
@@ -12,11 +14,11 @@ import javax.jms.Message;
  * @author manzhizhen
  * 
  */
-public abstract class SugarMQTransport {
-	public String dispatchType; // 消息分发类型
+public interface SugarMQTransport {
+/*	public String dispatchType; // 消息分发类型
 	public int acknowledgeType; // 消息应答类型
 	
-	public abstract void sendMessage(Message message) throws JMSException;
+	public abstract void sendMessage(Message message) throws JMSException;*/
 	
 	/**
 	 * 接收消息
@@ -24,7 +26,7 @@ public abstract class SugarMQTransport {
 	 * @return
 	 * @throws JMSException
 	 */
-	public abstract Message receiveMessage(long time) throws JMSException;
+/*	public abstract Message receiveMessage(long time) throws JMSException;
 
 	public abstract void connect() throws JMSException;
 	
@@ -42,19 +44,35 @@ public abstract class SugarMQTransport {
 		this.acknowledgeType = acknowledgeType;
 	}
 
-	/**
-	 * 返回消息分发类型
-	 * @return
-	 */
 	public String getDispatchType() {
 		return dispatchType;
 	}
 	
-	/**
-	 * 返回消息应答类型
-	 * @return
-	 */
 	public int getAcknowledgeType() {
 		return acknowledgeType;
-	}
+	}*/
+	
+	/**
+	 * 开启传送通道
+	 * @throws JMSException
+	 */
+	public void start() throws JMSException;
+	
+	/**
+	 * 关闭传送通道
+	 * @throws JMSException
+	 */
+	public void close() throws JMSException;
+	
+	/**
+	 * 获取收到的消息的队列
+	 * @return
+	 */
+	public BlockingQueue<Message> getReceiveMessageQueue();
+	
+	/**
+	 * 获取要发送消息的队列
+	 * @return
+	 */
+	public BlockingQueue<Message> getSendMessageQueue();
 }

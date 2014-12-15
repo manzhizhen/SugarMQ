@@ -148,12 +148,12 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 				rcvMsgObj = objectInputStream.readObject();
 				
 				if(!(rcvMsgObj instanceof Message)) {
-					logger.warn("客户端接收到一个非法消息应答：" + rcvMsgObj);
+					logger.warn("服务端接收到一个非法消息：" + rcvMsgObj);
 					continue ;
 				}
 				
 				message = (Message) rcvMsgObj;
-				logger.info("接收到客户端发来的一条消息:{}", message);
+				logger.info("服务端接收到客户端发来的一条消息:{}", message);
 				
 				receiveMessageQueue.put(message);
 			}
