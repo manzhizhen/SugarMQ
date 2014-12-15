@@ -83,6 +83,11 @@ public class SugarMQDestinationDispatcher {
 				} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
 						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
 					sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
+				
+				// 消费者拉取消息
+				} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
+						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+					// TODO:
 					
 				} else {
 					logger.error("未知消息类型，无法处理【{}】", message);

@@ -8,22 +8,20 @@ import com.sugarmq.message.SugarDestination;
 public class SugarQueue extends SugarDestination implements Queue {
 	private static final long serialVersionUID = 3731874591969734047L;
 	
-	private String queueName = "";
-	
 	public SugarQueue() {
 	}
 	
 	public SugarQueue(String queueName) {
-		this.queueName = queueName;
+		this.name = queueName;
 	}
 
 	@Override
 	public String getQueueName() throws JMSException {
-		return queueName;
+		return name;
 	}
 
 	public void setQueueName(String queueName) {
-		this.queueName = queueName;
+		this.name = queueName;
 	}
 
 }

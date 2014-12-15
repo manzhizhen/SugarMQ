@@ -23,7 +23,12 @@ public class WebTest1 {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		
 		while(true) {
-			reader.readLine();
+			String line = reader.readLine();
+			if("exit".equals(line)) {
+				break;
+			}
 		}
+		
+		((ClassPathXmlApplicationContext)applicationContext).close();
 	}
 }

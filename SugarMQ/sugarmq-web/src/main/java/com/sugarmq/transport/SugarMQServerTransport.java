@@ -24,7 +24,7 @@ public interface SugarMQServerTransport {
 	 * 关闭传送通道
 	 * @throws JMSException
 	 */
-	public void closed() throws JMSException;
+	public void close() throws JMSException;
 	
 	/**
 	 * 获取收到的消息的队列

@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 public class DateUtils {
 	public static final String DATE_FORMAT_TYPE1 = "yyyy-MM-dd HH:mm:ss";
 	public static final String DATE_FORMAT_TYPE2 = "yyyyMMddHHmmss";
-	
+	public static final String DATE_FORMAT_TYPE3 = "yyyyMMddHHmmssSSS";	
 	/**
 	 * 格式化日期成字符串
 	 * 线程安全

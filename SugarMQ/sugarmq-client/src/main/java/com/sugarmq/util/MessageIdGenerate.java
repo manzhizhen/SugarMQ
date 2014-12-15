@@ -3,10 +3,12 @@
  */
 package com.sugarmq.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Random;
 
 import javax.jms.JMSException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 用来生成消息ID
@@ -14,34 +16,21 @@ import javax.jms.JMSException;
  * @author manzhizhen
  */
 public class MessageIdGenerate {
-	private static final String DATE_FORMAT = "yyyyMMddHHmmssSSS";
-	private static final int OTHER_NUM_LENGTH = 4;
-	
-	private static volatile String lastTimeString = "";
-	private static volatile int index = 0;
+	private static Logger logger = LoggerFactory.getLogger(MessageIdGenerate.class);
 	
 	/**
 	 * 返回一个唯一的消息ID
 	 * @return
 	 */
 	public static String getNewMessageId() throws JMSException{
-		synchronized (lastTimeString) {
-			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
-			String startNum = simpleDateFormat.format(new Date());
-			if(startNum.compareTo(lastTimeString) > 0) {
-				index = 0;
-				lastTimeString = startNum;
-			} else if (startNum.compareTo(lastTimeString) == 0) {
-				if(index > (Math.pow(10, OTHER_NUM_LENGTH + 1) - 1)) {
-					throw new JMSException("生成消息ID出错：其他数据位数不足！");
-				}
-				
-				index++;
-			}
-			
-			// 格式化字符串并返回
-			return startNum + String.format("%1$0" + OTHER_NUM_LENGTH + "d", index);
-		}
+		String startNum = DateUtils.formatDate(DateUtils.DATE_FORMAT_TYPE3);
+		Random random = new Random();
+		int next = random.nextInt(100000000);
+		
+		String result = startNum + String.format("%1$08d", next);
+		logger.debug("生成的消息ID:{}", result);
+		
+		return result;
 	}
 	
 }

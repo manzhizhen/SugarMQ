@@ -12,14 +12,10 @@ import javax.jms.JMSException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import com.sugarmq.constant.TransportType;
-import com.sugarmq.transport.tcp.TcpSugarMQServerTransport;
+import com.sugarmq.transport.tcp.TcpSugarMQTransprotCenter;
 
 /**
  * 服务端传送器工厂
@@ -31,10 +27,7 @@ public class SugarMQServerTransportFactory {
 	private final static String REGEX_STR = "([a-z]{3})://([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}):([0-9]{1,6})"; // 解析提供者URL的正则表达式字符串
 	private Logger logger = LoggerFactory.getLogger(SugarMQTransportFactory.class);
 	
-	@Autowired
-	private TcpSugarMQServerTransport tcpSugarMQServerTransport;
-	
-	public SugarMQServerTransport createSugarMQTransport(String uri) throws JMSException{
+	public SugarMQTransprotCenter createSugarMQTransport(String uri) throws JMSException{
 		if (uri == null) {
 			throw new JMSException("服务端URI为空！！！");
 		}
@@ -58,10 +51,10 @@ public class SugarMQServerTransportFactory {
 		
 		if(TransportType.TRANSPORT_TCP.getValue().equals(transportType)) {
 			try {
-				tcpSugarMQServerTransport.setInetAddress(InetAddress.getByAddress(ipBytes) );
-				tcpSugarMQServerTransport.setPort(port);
+				TcpSugarMQTransprotCenter tcpSugarMQTransprotCenter = new 
+						TcpSugarMQTransprotCenter(InetAddress.getByAddress(ipBytes), port);
 				
-				return tcpSugarMQServerTransport;
+				return tcpSugarMQTransprotCenter;
 				
 			} catch (UnknownHostException e) {
 				logger.error(e.getMessage());

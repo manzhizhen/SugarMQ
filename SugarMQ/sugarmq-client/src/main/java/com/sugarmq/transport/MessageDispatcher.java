@@ -51,7 +51,7 @@ public class MessageDispatcher {
 	 */
 	public void dispatchOneMessage(Message message) throws JMSException {
 		if(consumerList.isEmpty()) {
-			logger.info("有消息到来，却没有消费者:" + message);
+			logger.error("有消息到来，却没有消费者:" + message);
 			return ;
 		}
 		

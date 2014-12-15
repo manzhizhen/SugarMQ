@@ -35,7 +35,7 @@ import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.queue.SugarQueueReceiver;
 import com.sugarmq.queue.SugarQueueSender;
 import com.sugarmq.transport.SugarMQTransport;
-import com.sugarmq.util.SessionIdgenerate;
+import com.sugarmq.util.SessionIdGenerate;
 
 public class SugarMQSession implements Session, QueueSession, TopicSession{
 	private String sessionId;
@@ -46,7 +46,7 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 	private SugarMQTransport sugarMQTransport;
 	
 	public SugarMQSession(boolean transacted, SugarMQTransport sugarMQTransport) throws JMSException {
-		this.sessionId = SessionIdgenerate.getNewSessionId();
+		this.sessionId = SessionIdGenerate.getNewSessionId();
 		this.transacted = transacted;
 		this.sugarMQTransport = sugarMQTransport;
 	}

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.sugarmq.transport.SugarMQServerTransport;
 import com.sugarmq.transport.SugarMQServerTransportFactory;
+import com.sugarmq.transport.SugarMQTransprotCenter;
 
 /**
  * Web端核心管理类
@@ -27,7 +28,7 @@ public class SugarMQServerManager {
 			.getLogger(SugarMQServerManager.class);
 
 	private AtomicBoolean START_STATUS = new AtomicBoolean(false);
-	private ExecutorService executorService;
+//	private ExecutorService executorService;
 
 	private @Value("${server_uri}")
 	String uri;
@@ -39,7 +40,7 @@ public class SugarMQServerManager {
 	@Autowired
 	private SugarMQServerTransportFactory sugarMQServerTransportFactory;
 	
-	private SugarMQServerTransport sugarMQServerTransport;
+	private SugarMQTransprotCenter sugarMQTransprotCenter;
 
 	/**
 	 * 启动Sugar提供者
@@ -52,19 +53,18 @@ public class SugarMQServerManager {
 		}
 
 		connectionPoolManager.init();
-		sugarMQServerTransport = sugarMQServerTransportFactory
+		sugarMQTransprotCenter = sugarMQServerTransportFactory
 				.createSugarMQTransport(uri);
-		sugarMQServerTransport.start();
 
 		// 创建和JVM进程可用内核数一样的线程数
-		executorService = Executors.newFixedThreadPool(Runtime.getRuntime()
-				.availableProcessors());
+//		executorService = Executors.newFixedThreadPool(Runtime.getRuntime()
+//				.availableProcessors());
 		
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					sugarMQServerTransport.start();
+					sugarMQTransprotCenter.start();
 				} catch (JMSException e) {
 					logger.error(e.getMessage());
 				}

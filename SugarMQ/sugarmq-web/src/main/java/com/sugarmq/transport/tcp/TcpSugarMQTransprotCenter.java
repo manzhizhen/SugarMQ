@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.JMSException;
 
@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.sugarmq.manager.tcp.TcpReceiveThread;
+import com.sugarmq.transport.SugarMQTransprotCenter;
 
 /**
  * 类说明：
@@ -26,7 +26,7 @@ import com.sugarmq.manager.tcp.TcpReceiveThread;
  *
  * 2014年12月11日
  */
-public class TcpSugarMQTransprotCenter {
+public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 	private InetAddress inetAddress;
 	private int port;
 	private ServerSocket serverSocket;
@@ -51,7 +51,7 @@ public class TcpSugarMQTransprotCenter {
 		try {
 			serverSocket = new ServerSocket(port, backlog, inetAddress);
 		} catch (IOException e) {
-			logger.error("ServerSocket初始化失败：{}", e);
+			logger.error("ServerSocket初始化失败", e);
 			throw new JMSException(String.format("TcpSugarMQServerTransport绑定URI出错：【%s】【%s】【%s】", 
 					new Object[]{inetAddress, port, e.getMessage()}));
 		}
@@ -68,6 +68,21 @@ public class TcpSugarMQTransprotCenter {
 			} catch (IOException e) {
 				logger.error("TcpSugarMQServerTransport启动失败：", e);
 			}
+		}
+	}
+
+	@Override
+	public void close() throws JMSException {
+		logger.info("TcpSugarMQTransprotCenter正在关闭... ...");
+		for(Map.Entry<Socket, TcpSugarMQServerTransport> entry : transprotMap.entrySet()) {
+			entry.getValue().close();
+		}
+		
+		try {
+			serverSocket.close();
+		} catch (IOException e) {
+			logger.error("关闭ServerSocket异常", e);
+			throw new JMSException(String.format("关闭ServerSocket异常:{}", e.getMessage()));
 		}
 	}
 }

@@ -27,7 +27,7 @@ public class NioSugarMQServerTransport implements SugarMQServerTransport{
 	}
 
 	@Override
-	public void closed() throws JMSException {
+	public void close() throws JMSException {
 		// TODO Auto-generated method stub
 		
 	}

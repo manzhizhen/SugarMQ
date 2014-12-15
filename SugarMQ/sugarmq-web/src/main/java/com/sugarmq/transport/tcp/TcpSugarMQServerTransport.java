@@ -17,7 +17,6 @@ import javax.jms.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import com.sugarmq.transport.SugarMQServerTransport;
 
@@ -27,7 +26,6 @@ import com.sugarmq.transport.SugarMQServerTransport;
  * @author manzhizhen
  * 
  */
-@Component
 public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	
 	private Socket socket;
@@ -99,7 +97,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	}
 	
 	@Override
-	public void closed() {
+	public void close() {
 		logger.debug("TcpSugarMQServerTransport即将被关闭！");
 		
 		if(sendMessageThread != null && Thread.State.TERMINATED != sendMessageThread.getState()) {
