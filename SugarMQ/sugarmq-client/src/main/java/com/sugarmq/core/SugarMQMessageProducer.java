@@ -15,6 +15,10 @@ import javax.jms.QueueSender;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
 
+import com.sugarmq.constant.MessageProperty;
+import com.sugarmq.constant.MessageType;
+import com.sugarmq.transport.SugarMQTransport;
+
 /**
  * 抽象的消息生产者
  * 
@@ -27,6 +31,14 @@ public class SugarMQMessageProducer implements QueueSender, TopicPublisher {
 	protected volatile AtomicInteger priority = new AtomicInteger(Message.DEFAULT_PRIORITY);	// 消息优先级
 
 	protected volatile AtomicBoolean disableMessageId = new AtomicBoolean(false);
+	
+	private SugarMQTransport sugarMQTransport;
+	private Destination destination;
+	
+	public SugarMQMessageProducer(Destination destination, SugarMQTransport sugarMQTransport) {
+		this.destination = destination;
+		this.sugarMQTransport = sugarMQTransport;
+	}
 	
 	@Override
 	public int getDeliveryMode() throws JMSException {
@@ -94,8 +106,7 @@ public class SugarMQMessageProducer implements QueueSender, TopicPublisher {
 
 	@Override
 	public boolean getDisableMessageID() throws JMSException {
-		// TODO Auto-generated method stub
-		return false;
+		return this.disableMessageId.get();
 	}
 
 	@Override
@@ -105,8 +116,8 @@ public class SugarMQMessageProducer implements QueueSender, TopicPublisher {
 	}
 
 	@Override
-	public void setDisableMessageID(boolean arg0) throws JMSException {
-		// TODO Auto-generated method stub
+	public void setDisableMessageID(boolean disableMessageId) throws JMSException {
+		this.disableMessageId.set(disableMessageId);
 		
 	}
 
@@ -156,14 +167,18 @@ public class SugarMQMessageProducer implements QueueSender, TopicPublisher {
 
 	@Override
 	public void send(Queue arg0, Message arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
-	public void send(Queue arg0, Message arg1, int arg2, int arg3, long arg4)
+	public void send(Queue queue, Message message, int arg2, int arg3, long arg4)
 			throws JMSException {
-		// TODO Auto-generated method stub
+		message.setJMSType(MessageType.PRODUCER_MESSAGE.getValue()); // 设置消息类型
+		message.setJMSDestination(queue);
+		message.setBooleanProperty(MessageProperty.DISABLE_MESSAGE_ID.getKey(), disableMessageId.get());
+		
+		System.out.println(message.getJMSType());
+		
+		sugarMQTransport.sendMessage(message);
 		
 	}
 

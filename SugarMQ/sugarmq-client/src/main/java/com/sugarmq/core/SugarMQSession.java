@@ -153,7 +153,7 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 			throw new JMSException("传入的Destination非法！");
 		}
 		
-		SugarQueueSender sugarQueueSender = new SugarQueueSender(destination, sugarMQTransport);
+		SugarMQMessageProducer sugarQueueSender = new SugarMQMessageProducer(destination, sugarMQTransport);
 		return sugarQueueSender;
 	}
 
