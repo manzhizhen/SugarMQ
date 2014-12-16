@@ -4,6 +4,8 @@
 package com.sugarmq.transport;
 
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -22,9 +24,13 @@ import com.sugarmq.transport.tcp.TcpMessageTransport;
  *
  */
 public class MessageDispatcher {
-	private SugarMQTransport sugarMQTransport;
+//	private SugarMQTransport sugarMQTransport;
 	private ArrayList<MessageConsumer> consumerList = new ArrayList<MessageConsumer>(10); // 消费者列表
-	private int nextIndex = 0;	// 下一个消费者索引
+	// key-消费者ID，value-消费者对象
+	private ConcurrentHashMap<String, MessageConsumer> consumerMap = new ConcurrentHashMap<String, MessageConsumer>();
+//	private int nextIndex = 0;	// 下一个消费者索引
+	
+	private BlockingQueue<Message> receiveMessageQueue; // 待分发的消息队列
 	
 	private Logger logger = LoggerFactory.getLogger(TcpMessageTransport.class);
 	
@@ -32,8 +38,8 @@ public class MessageDispatcher {
 	 * @param dispatchType
 	 * @param acknowledgeType
 	 */
-	public MessageDispatcher(SugarMQTransport sugarMQTransport) {
-		this.sugarMQTransport = sugarMQTransport;
+	public MessageDispatcher(BlockingQueue<Message> receiveMessageQueue) {
+		this.receiveMessageQueue = receiveMessageQueue;
 	}
 	
 	/**
@@ -41,6 +47,13 @@ public class MessageDispatcher {
 	 * @param messageConsumer
 	 */
 	public void addConsumer(MessageConsumer messageConsumer) {
+		if(messageConsumer == null) {
+			throw new IllegalArgumentException("MessageConsumer不能为空！");
+		}
+		
+		String customerId = messageConsumer.gets
+		if(S)
+		
 		consumerList.add(messageConsumer);
 	}
 	

@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
-import com.sugarmq.core.SugarMessageProducer;
+import com.sugarmq.core.SugarMQMessageProducer;
 import com.sugarmq.message.SugarDestination;
 import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.transport.SugarMQTransport;
 
-public class SugarQueueSender extends SugarMessageProducer implements QueueSender {
+public class SugarQueueSender extends SugarMQMessageProducer implements QueueSender {
 	private SugarMQTransport sugarMQTransport;
 	private Destination destination;
 	

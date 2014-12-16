@@ -31,9 +31,9 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	private Socket socket;
 	
 	// 收消息的队列
-	private LinkedBlockingQueue<Message> receiveMessageQueue = new LinkedBlockingQueue<Message>();
+	private BlockingQueue<Message> receiveMessageQueue = new LinkedBlockingQueue<Message>();
 	// 发消息的队列
-	private LinkedBlockingQueue<Message> sendMessageQueue = new LinkedBlockingQueue<Message>();
+	private BlockingQueue<Message> sendMessageQueue = new LinkedBlockingQueue<Message>();
 	
 	private Thread sendMessageThread;
 	private Thread receiveMessageThread;
@@ -54,13 +54,13 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	@Override
 	public void start() throws JMSException {
 		if(socket.isClosed()) {
-			logger.error("Socket已经关闭，TcpSugarMQServerTransport开启失败！");
-			throw new JMSException("Socket已经关闭，TcpSugarMQServerTransport开启失败！");
+			logger.error("Socket已经关闭，TcpSugarMQServerTransport启动失败！");
+			throw new JMSException("Socket已经关闭，TcpSugarMQServerTransport启动失败！");
 		}
 		
 		if(!socket.isConnected()) {
-			logger.error("Socket未连接，TcpSugarMQServerTransport开启失败！");
-			throw new JMSException("Socket未连接，TcpSugarMQServerTransport开启失败！");
+			logger.error("Socket未连接，TcpSugarMQServerTransport启动失败！");
+			throw new JMSException("Socket未连接，TcpSugarMQServerTransport启动失败！");
 		}
 		
 		// 消息接收线程
@@ -158,9 +158,9 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 				receiveMessageQueue.put(message);
 			}
 			
-			logger.error("Socket状态异常，TcpSugarMQServerTransport接收消息线程结束！");
+			logger.error("Socket状态异常，TcpSugarMQServerTransport消息接收线程结束！");
 		} catch (Exception e) {
-			logger.error("TcpSocketThread线程错误：{}", e);
+			logger.error("TcpSugarMQServerTransport消息接收线程错误：{}", e);
 		}
 	}
 	
@@ -175,7 +175,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 			try {
 				message = sendMessageQueue.take();
 			} catch (InterruptedException e1) {
-				logger.info("TcpSocketThread发送线程被要求停止！");
+				logger.info("TcpSugarMQServerTransport消息发送线程被要求停止！");
 				break ;
 			}
 			
