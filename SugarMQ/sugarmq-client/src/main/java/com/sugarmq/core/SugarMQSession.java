@@ -30,9 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageProperty;
+import com.sugarmq.consumer.SugarMQMessageConsumer;
 import com.sugarmq.message.bean.SugarMQTextMessage;
+import com.sugarmq.producer.SugarMQMessageProducer;
 import com.sugarmq.queue.SugarQueue;
-import com.sugarmq.queue.SugarQueueReceiver;
 import com.sugarmq.queue.SugarQueueSender;
 import com.sugarmq.transport.SugarMQTransport;
 import com.sugarmq.util.SessionIdGenerate;
@@ -89,7 +90,7 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 			throw new JMSException("传入的Destination非法:" + destination);
 		}
 		
-		SugarQueueReceiver sugarQueueReceiver = new SugarQueueReceiver(sugarMQTransport, destination);
+		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(sugarMQTransport, destination);
 		return sugarQueueReceiver;
 	}
 

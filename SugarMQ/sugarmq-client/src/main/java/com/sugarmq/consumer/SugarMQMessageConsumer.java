@@ -1,28 +1,31 @@
-package com.sugarmq.queue;
+package com.sugarmq.consumer;
 
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
-import javax.jms.Queue;
-import javax.jms.QueueReceiver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.constant.ConsumerState;
 import com.sugarmq.transport.SugarMQTransport;
 
-public class SugarQueueReceiver implements QueueReceiver {
-	private SugarMQTransport sugarMQTransport;
+public class SugarMQMessageConsumer implements MessageConsumer {
+	private String consumerId;	// 消费者ID，可以由客户端设置，但最终由服务端来决定
+	
+	private String state;	// 消费者的状态
+	
 	private String messageSelector;
 	private Destination destination;
 	
 	private MessageListener messageListener;
 	
-	private Logger logger = LoggerFactory.getLogger(SugarQueueReceiver.class);
+	private Logger logger = LoggerFactory.getLogger(SugarMQMessageConsumer.class);
 	
-	public SugarQueueReceiver(SugarMQTransport sugarMQTransport, Destination destination) throws JMSException{
+	public SugarMQMessageConsumer(SugarMQTransport sugarMQTransport, Destination destination) throws JMSException{
 		if(sugarMQTransport == null) {
 			throw new JMSException("创建队列消费者失败，SugarMQTransport为空！");
 		}
@@ -31,8 +34,10 @@ public class SugarQueueReceiver implements QueueReceiver {
 			throw new JMSException("创建队列消费者失败，Destination为空！");
 		}
 		
-		this.sugarMQTransport = sugarMQTransport;
 		this.destination = destination;
+		
+		// 设置状态为创建状态
+		state = ConsumerState.CREATE.getValue();
 	}
 	
 
@@ -59,7 +64,7 @@ public class SugarQueueReceiver implements QueueReceiver {
 
 	@Override
 	public Message receive(long time) throws JMSException {
-		return sugarMQTransport.receiveMessage(time);
+		return null;
 	}
 
 	@Override
@@ -77,10 +82,18 @@ public class SugarQueueReceiver implements QueueReceiver {
 		this.messageListener = messageListener;
 	}
 
-	@Override
-	public Queue getQueue() throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+
+	public String getConsumerId() {
+		return consumerId;
 	}
+
+	public void setConsumerId(String consumerId) {
+		this.consumerId = consumerId;
+	}
+
+
+
+	
+	
 
 }

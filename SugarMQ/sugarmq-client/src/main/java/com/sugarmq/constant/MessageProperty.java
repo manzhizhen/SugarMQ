@@ -12,7 +12,8 @@ public enum MessageProperty {
 	DISABLE_MESSAGE_ID("_#_disableMessageId", false),
 	SESSION_ID("_#_sessionId", null),
 	MESSAGE_TYPE("_#_messageType", null),
-	CUSTOMER_ID("_#_customerId", null);
+	CUSTOMER_ID("_#_customerId", null),
+	CUSTOMER_CLIENT_ID("_#_customerClientId", null);
 	
 	String key;
 	Object value;

@@ -23,7 +23,7 @@ import com.sugarmq.queue.SugarMQMessageContainer;
 public class SugarMQCustomerDispatcher {
 	private SugarMQCustomerManager sugarMQCustomerManager;
 	private SugarMQMessageContainer sugarMQMessageContainer;
-	private Thread thread;
+	private Thread dispatcherThread;
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQCustomerDispatcher.class);
 
@@ -50,7 +50,9 @@ public class SugarMQCustomerDispatcher {
 	}
 	
 	public void start() {
-		thread = new Thread(new Runnable() {
+		logger.info("SugarMQCustomerDispatcher准备开始工作... ...");
+		
+		dispatcherThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				Message message = null;
@@ -67,6 +69,15 @@ public class SugarMQCustomerDispatcher {
 			}
 		});
 		
-		thread.start();
+		dispatcherThread.start();
+	}
+	
+	/**
+	 * 关闭
+	 */
+	public void stop() {
+		if(dispatcherThread != null) {
+			dispatcherThread.interrupt();
+		}
 	}
 }

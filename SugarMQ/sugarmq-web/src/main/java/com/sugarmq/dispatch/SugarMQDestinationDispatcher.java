@@ -28,6 +28,7 @@ public class SugarMQDestinationDispatcher {
 	private BlockingQueue<Message> sendMessageQueue;
 	private SugarMQMessageManager sugarMQMessageManager;
 	private SugarMQCustomerManager sugarMQCustomerManager;
+	private Thread dispatcherThread;
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQDestinationDispatcher.class);
 	
@@ -45,57 +46,78 @@ public class SugarMQDestinationDispatcher {
 		this.sugarMQCustomerManager = sugarMQCustomerManager;
 	}
 	
+	/**
+	 * 开始工作...
+	 */
 	public void start() {
-		logger.info("SugarMQQueueDispatcher已经开始工作.");
-		Message message = null;
-		while(!Thread.currentThread().isInterrupted()) {
-			try {
-				message = receiveMessageQueue.take();
-			} catch (InterruptedException e) {
-				logger.info("SugarMQQueueDispatcher被中断，即将退出.");
-				break ;
-			}
-			
-			logger.debug("开始处理消息【{}】", message);
-			
-			try {
-				// 生产者消息
-				if(MessageType.PRODUCER_MESSAGE.getValue().
-						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
-					sugarMQMessageManager.addMessage(message);
-					// 创建应答消息
-					SugarMQBytesMessage answerMessage = new SugarMQBytesMessage();
-					answerMessage.setStringProperty(MessageProperty.MESSAGE_TYPE.getKey(), 
-							MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
-					answerMessage.setJMSMessageID(message.getJMSMessageID());
+		logger.info("SugarMQDestinationDispatcher准备开始工作... ...");
+		
+		dispatcherThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				Message message = null;
+				while(!Thread.currentThread().isInterrupted()) {
 					try {
-						sendMessageQueue.put(answerMessage);
+						message = receiveMessageQueue.take();
 					} catch (InterruptedException e) {
 						logger.info("SugarMQQueueDispatcher被中断，即将退出.");
+						break ;
 					}
-				
-				// 消费者应答消息
-				} else if(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue().
-						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
-					sugarMQMessageManager.removeMessage(message);
-				
-				// 消费者注册消息
-				} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
-						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
-					sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
-				
-				// 消费者拉取消息
-				} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
-						equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
-					// TODO:
 					
-				} else {
-					logger.error("未知消息类型，无法处理【{}】", message);
+					logger.debug("开始处理消息【{}】", message);
+					
+					try {
+						// 生产者消息
+						if(MessageType.PRODUCER_MESSAGE.getValue().
+								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+							sugarMQMessageManager.addMessage(message);
+							// 创建应答消息
+							SugarMQBytesMessage answerMessage = new SugarMQBytesMessage();
+							answerMessage.setStringProperty(MessageProperty.MESSAGE_TYPE.getKey(), 
+									MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
+							answerMessage.setJMSMessageID(message.getJMSMessageID());
+							try {
+								sendMessageQueue.put(answerMessage);
+							} catch (InterruptedException e) {
+								logger.info("SugarMQQueueDispatcher被中断，即将退出.");
+							}
+						
+						// 消费者应答消息
+						} else if(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue().
+								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+							sugarMQMessageManager.removeMessage(message);
+						
+						// 消费者注册消息
+						} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
+								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+							sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
+						
+						// 消费者拉取消息
+						} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
+								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+							// TODO:
+							
+						} else {
+							logger.error("未知消息类型，无法处理【{}】", message);
+						}
+						
+					} catch (JMSException e) {
+						logger.error("SugarMQQueueDispatcher消息处理失败:【{}】", message, e);
+					}
 				}
-				
-			} catch (JMSException e) {
-				logger.error("SugarMQQueueDispatcher消息处理失败:【{}】", message, e);
 			}
+		});
+		
+		dispatcherThread.start();
+		logger.info("SugarMQDestinationDispatcher已经开始工作");
+	}
+	
+	/**
+	 * 关闭
+	 */
+	public void stop() {
+		if(dispatcherThread != null) {
+			dispatcherThread.interrupt();
 		}
 	}
 }
