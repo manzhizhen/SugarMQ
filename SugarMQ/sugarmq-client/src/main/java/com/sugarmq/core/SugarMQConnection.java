@@ -14,6 +14,7 @@ import javax.jms.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.transport.SugarMQTransport;
 
 /**
@@ -25,10 +26,18 @@ public class SugarMQConnection implements Connection{
 	
 	private SugarMQTransport sugarMQTransport;
 	
+	private MessageDispatcher messageDispatcher;
+	
 	private Logger logger = LoggerFactory.getLogger(SugarMQConnection.class);
 	
 	public SugarMQConnection(SugarMQTransport sugarMQTransport) {
+		if(sugarMQTransport == null) {
+			throw new IllegalArgumentException("SugarMQTransport不能为空！");
+		}
+		
 		this.sugarMQTransport = sugarMQTransport;
+		messageDispatcher = new MessageDispatcher(sugarMQTransport.getReceiveMessageQueue(), 
+				sugarMQTransport.getSendMessageQueue());
 	}
 
 	@Override
@@ -52,7 +61,7 @@ public class SugarMQConnection implements Connection{
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
 		sugarMQTransport.setAcknowledgeType(acknowledgeMode);
-		SugarMQSession sugarMQSession = new SugarMQSession(transacted, sugarMQTransport);
+		SugarMQSession sugarMQSession = new SugarMQSession(transacted, messageDispatcher);
 		return sugarMQSession;
 	}
 
@@ -82,20 +91,13 @@ public class SugarMQConnection implements Connection{
 
 	@Override
 	public void start() throws JMSException {
-		sugarMQTransport.connect();
-		
-		long startTime = System.currentTimeMillis();
-		
-		while(!sugarMQTransport.isConnected()) {
-			if(System.currentTimeMillis() - startTime > SugarMQConnectionFactory.OVERTIME) {
-				logger.error("连接SugarMQ超时！");
-				throw new JMSException("连接SugarMQ超时！");
-			}
-		}
+		logger.info("SugarMQConnection开始启动！");
+		sugarMQTransport.start();
 	}
 
 	@Override
 	public void stop() throws JMSException {
+		sugarMQTransport.close();
 	}
 
 }

@@ -10,10 +10,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -21,16 +19,14 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.transport.SugarMQTransport;
-import com.sugarmq.util.MessageIdGenerate;
 
 /**
  * 采用Socket来传输对象
  * @author manzhizhen
  *
  */
-public class TcpMessageTransport implements SugarMQTransport{
+public class TcpMessageTransport extends SugarMQTransport{
 	private InetAddress inetAddress;
 	private int port;
 	private Socket socket;
@@ -47,12 +43,10 @@ public class TcpMessageTransport implements SugarMQTransport{
 	
 //	private static ByteBuffer objByteBuffer = ByteBuffer.allocate(2048);
 	
-	private TcpMessageTransportSendThread tcpMessageTransportSendThread;	// 生产者发送消息的线程
-	private TcpMessageTransportSendAcknowledgeThread tcpMessageTransportSendAcknowledgeThread;	// 生产者发送消息接收应答的线程
-	private TcpMessageTransportReceiveThread tcpMessageTransportReceiveThread; // 消费者消息接收线程
-	private TcpMessageTransportReceiveAcknowledgeThread tcpMessageTransportReceiveAcknowledgeThread; // 消费者消息接收应答线程
-	
-	private MessageDispatcher messageDispatch;	// 消息分发器
+//	private TcpMessageTransportSendThread tcpMessageTransportSendThread;	// 生产者发送消息的线程
+//	private TcpMessageTransportSendAcknowledgeThread tcpMessageTransportSendAcknowledgeThread;	// 生产者发送消息接收应答的线程
+//	private TcpMessageTransportReceiveThread tcpMessageTransportReceiveThread; // 消费者消息接收线程
+//	private TcpMessageTransportReceiveAcknowledgeThread tcpMessageTransportReceiveAcknowledgeThread; // 消费者消息接收应答线程
 	
 	private Logger logger = LoggerFactory.getLogger(TcpMessageTransport.class);
 	
@@ -63,11 +57,10 @@ public class TcpMessageTransport implements SugarMQTransport{
 		
 		this.inetAddress = inetAddress;
 		this.port = port;
-		messageDispatch = new MessageDispatcher(this);
 	}
 
 //	@Override
-	public void sendMessage(Message message) throws JMSException{
+/*	public void sendMessage(Message message) throws JMSException{
 		if(message == null) {
 			logger.error("所发送的消息为null！！");
 			return ;
@@ -92,10 +85,10 @@ public class TcpMessageTransport implements SugarMQTransport{
 			logger.error("发送消息失败：" +  e.getMessage());
 			throw new JMSException("发送消息失败：" +  e.getMessage());
 		}
-	}
+	}*/
 	
 //	@Override
-	public void connect() throws JMSException {
+/*	public void connect() throws JMSException {
 		try {
 			socket = new Socket(inetAddress, port);
 			
@@ -121,9 +114,7 @@ public class TcpMessageTransport implements SugarMQTransport{
 			logger.error("连接到SugarMQ失败：" + socket.toString() + " 失败信息：" + e.getMessage());
 			throw new JMSException(e.getMessage());
 		}
-
-		
-	}
+	}*/
 	
 	@Override
 	public void close() throws JMSException {

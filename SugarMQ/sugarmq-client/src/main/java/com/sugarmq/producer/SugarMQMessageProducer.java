@@ -3,7 +3,6 @@
  */
 package com.sugarmq.producer;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,10 +11,6 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.QueueSender;
-import javax.jms.Topic;
-import javax.jms.TopicPublisher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +18,6 @@ import org.slf4j.LoggerFactory;
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.transport.MessageDispatcher;
-import com.sugarmq.transport.SugarMQTransport;
-import com.sugarmq.transport.tcp.TcpMessageTransport;
-import com.sugarmq.util.MessageIdGenerate;
 
 /**
  * 抽象的消息生产者
@@ -67,11 +59,10 @@ public class SugarMQMessageProducer implements MessageProducer {
 
 	@Override
 	public void send(Message message) throws JMSException {
+		logger.debug("即将发送一条消息:{}", message);
 		message.setJMSType(MessageType.PRODUCER_MESSAGE.getValue()); // 设置消息类型
 		message.setJMSDestination(destination);
 		message.setBooleanProperty(MessageProperty.DISABLE_MESSAGE_ID.getKey(), disableMessageId.get());
-		
-		System.out.println(message.getJMSType());
 		
 		messageDispatcher.sendMessage(message);
 	}

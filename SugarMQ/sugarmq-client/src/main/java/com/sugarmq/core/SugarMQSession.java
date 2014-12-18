@@ -13,17 +13,12 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
-import javax.jms.QueueReceiver;
-import javax.jms.QueueSender;
-import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.slf4j.Logger;
@@ -34,22 +29,21 @@ import com.sugarmq.consumer.SugarMQMessageConsumer;
 import com.sugarmq.message.bean.SugarMQTextMessage;
 import com.sugarmq.producer.SugarMQMessageProducer;
 import com.sugarmq.queue.SugarQueue;
-import com.sugarmq.queue.SugarQueueSender;
-import com.sugarmq.transport.SugarMQTransport;
+import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.util.SessionIdGenerate;
 
-public class SugarMQSession implements Session, QueueSession, TopicSession{
+public class SugarMQSession implements Session{
 	private String sessionId;
 	private boolean transacted;	// 事务标记
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQSession.class);
 	
-	private SugarMQTransport sugarMQTransport;
+	private MessageDispatcher messageDispatcher;
 	
-	public SugarMQSession(boolean transacted, SugarMQTransport sugarMQTransport) throws JMSException {
+	public SugarMQSession(boolean transacted, MessageDispatcher messageDispatcher) throws JMSException {
 		this.sessionId = SessionIdGenerate.getNewSessionId();
 		this.transacted = transacted;
-		this.sugarMQTransport = sugarMQTransport;
+		this.messageDispatcher = messageDispatcher;
 	}
 	
 	@Override
@@ -90,7 +84,7 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 			throw new JMSException("传入的Destination非法:" + destination);
 		}
 		
-		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(sugarMQTransport, destination);
+		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(destination);
 		return sugarQueueReceiver;
 	}
 
@@ -154,7 +148,7 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 			throw new JMSException("传入的Destination非法！");
 		}
 		
-		SugarMQMessageProducer sugarQueueSender = new SugarMQMessageProducer(destination, sugarMQTransport);
+		SugarMQMessageProducer sugarQueueSender = new SugarMQMessageProducer(destination, messageDispatcher);
 		return sugarQueueSender;
 	}
 
@@ -247,43 +241,5 @@ public class SugarMQSession implements Session, QueueSession, TopicSession{
 	public void unsubscribe(String arg0) throws JMSException {
 		// TODO Auto-generated method stub
 		
-	}
-
-	@Override
-	public TopicPublisher createPublisher(Topic arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TopicSubscriber createSubscriber(Topic arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public TopicSubscriber createSubscriber(Topic arg0, String arg1,
-			boolean arg2) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public QueueReceiver createReceiver(Queue arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public QueueReceiver createReceiver(Queue arg0, String arg1)
-			throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public QueueSender createSender(Queue arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

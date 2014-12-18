@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.ConsumerState;
-import com.sugarmq.transport.SugarMQTransport;
 
 public class SugarMQMessageConsumer implements MessageConsumer {
 	private String consumerId;	// 消费者ID，可以由客户端设置，但最终由服务端来决定
@@ -25,13 +24,9 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQMessageConsumer.class);
 	
-	public SugarMQMessageConsumer(SugarMQTransport sugarMQTransport, Destination destination) throws JMSException{
-		if(sugarMQTransport == null) {
-			throw new JMSException("创建队列消费者失败，SugarMQTransport为空！");
-		}
-		
+	public SugarMQMessageConsumer(Destination destination){
 		if(destination == null) {
-			throw new JMSException("创建队列消费者失败，Destination为空！");
+			throw new IllegalArgumentException("创建消费者失败，Destination为空！");
 		}
 		
 		this.destination = destination;

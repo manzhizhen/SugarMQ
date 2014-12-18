@@ -3,24 +3,17 @@
  */
 package com.sugarmq.transport;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jms.JMSException;
-import javax.jms.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.MessageDispatchType;
 import com.sugarmq.constant.TransportType;
-import com.sugarmq.transport.tcp.NioMessageTransport;
 import com.sugarmq.transport.tcp.TcpMessageTransport;
 
 /**
@@ -58,10 +51,8 @@ public class SugarMQTransportFactory {
 		
 		if(TransportType.TRANSPORT_TCP.getValue().equals(transportType)) {
 			try {
-				TcpMessageTransport tcpMessageTransport = new TcpMessageTransport(MessageDispatchType.IN_TURN.getValue(), 
-						Session.AUTO_ACKNOWLEDGE);
-				tcpMessageTransport.setInetAddress(InetAddress.getByAddress(ipBytes) );
-				tcpMessageTransport.setPort(port);
+				TcpMessageTransport tcpMessageTransport = new TcpMessageTransport(InetAddress.getByAddress(ipBytes), 
+						port);
 				
 				return tcpMessageTransport;
 				
@@ -72,25 +63,7 @@ public class SugarMQTransportFactory {
 			
 			
 		} else if(TransportType.TRANSPORT_NIO.getValue().equals(transportType)) {
-			// 初始化选择器
-			try {
-				Selector selector = Selector.open();
-
-				SocketChannel channel = SocketChannel.open();
-				// 设置为非阻塞模式
-				channel.configureBlocking(false);
-
-				// 设置传输器对象
-				NioMessageTransport sugarMQTransport = new NioMessageTransport();
-				sugarMQTransport.setInetSocketAddress(new InetSocketAddress(InetAddress
-						.getByAddress(ipBytes), port));
-				
-				return sugarMQTransport;
-
-			} catch (IOException e) {
-				logger.error(e.getMessage());
-				throw new JMSException(e.getMessage());
-			}
+			// TODO
 		}
 		
 		throw new JMSException("无法找到匹配的传输器类型：" + uri);
