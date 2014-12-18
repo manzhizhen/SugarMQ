@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.manager.SugarMQConsumerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
-import com.sugarmq.message.bean.SugarMQBytesMessage;
+import com.sugarmq.message.bean.SugarMQMessage;
 
 /**
  * 消息目的地分发器
@@ -71,7 +71,7 @@ public class SugarMQDestinationDispatcher {
 								equals(message.getJMSType())) {
 							sugarMQMessageManager.addMessage(message);
 							// 创建应答消息
-							SugarMQBytesMessage answerMessage = new SugarMQBytesMessage();
+							SugarMQMessage answerMessage = new SugarMQMessage();
 							answerMessage.setJMSType(MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
 							answerMessage.setJMSMessageID(message.getJMSMessageID());
 							try {

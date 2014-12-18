@@ -3,6 +3,8 @@
  */
 package com.sugarmq.transport;
 
+import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -23,6 +25,7 @@ import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.consumer.SugarMQMessageConsumer;
 import com.sugarmq.message.bean.SugarMQMessage;
+import com.sugarmq.util.DateUtils;
 import com.sugarmq.util.MessageIdGenerate;
 
 /**
@@ -139,7 +142,7 @@ public class MessageDispatcher {
 	 * 消费者ID可以由客户端设置，最终是否采纳由服务器决定
 	 * @param messageConsumer
 	 */
-	public void addConsumer(MessageConsumer messageConsumer) throws JMSException {
+	public synchronized void addConsumer(MessageConsumer messageConsumer) throws JMSException {
 		logger.info("准备注册一个消费者：{}", messageConsumer);
 		
 		if(messageConsumer == null || !(messageConsumer instanceof SugarMQMessageConsumer)) {
@@ -148,9 +151,13 @@ public class MessageDispatcher {
 		
 		SugarMQMessageConsumer consumer = (SugarMQMessageConsumer) messageConsumer;
 		String consumerId = consumer.getConsumerId();
+		if(StringUtils.isBlank(consumerId) || addConsumerAckMap.containsKey(consumerId)) {
+			consumerId = getNewCustomerId();
+		}
 		Message addConsumerMsg = new SugarMQMessage();
 		addConsumerMsg.setStringProperty(MessageProperty.CUSTOMER_CLIENT_ID.getKey(), consumerId);
 		addConsumerMsg.setJMSType(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue());
+		addConsumerMsg.setJMSDestination(consumer.getDestination());
 		
 		DataCountDownLatch<Message> dataCountDownLatch = new DataCountDownLatch<Message>(1);
 		addConsumerAckMap.put(consumerId, dataCountDownLatch);
@@ -191,6 +198,27 @@ public class MessageDispatcher {
 			throw new JMSException("SugarMQMessageProducer消息发送被中断:" + e.getMessage());
 		}
 		
+	}
+	
+	/**
+	 * 生成一个消费者ID
+	 * 非线程安全
+	 * @return
+	 */
+	private String getNewCustomerId() {
+		String newId = DateUtils.formatDate(DateUtils.DATE_FORMAT_TYPE2);
+		Random random = new Random(new Date().getTime());
+		int next = random.nextInt(1000000);
+		while(true) {
+			if(addConsumerAckMap.containsKey(newId + next)) {
+				next = random.nextInt(1000000);
+			} else {
+				break ;
+			}
+		}
+		
+		logger.debug("生成的消费者ID为【{}】", newId + next);
+		return newId + next;
 	}
 	
 	/**

@@ -1,12 +1,12 @@
 package com.sugarmq.manager;
 
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.Queue;
 import javax.jms.Topic;
 
 import org.slf4j.Logger;
@@ -64,15 +64,18 @@ public class SugarMQMessageManager {
 			SugarMQMessageContainer queue = messageContainerMap.putIfAbsent(name, new SugarMQMessageContainer(name, 
 					MessageContainerType.QUEUE.getValue()));
 			
+			if(queue == null) {
+				queue = messageContainerMap.get(name);
+			}
+			
 			if (messageContainerMap.size() >= MAX_QUEUE_NUM) {
 				logger.warn("MOM中队列数已满，添加队列失败:【{}】", name);
 				throw new JMSException("MOM中队列数已满，添加队列失败:【{}】", name);
 			}
 			
-			queue.putMessage(message);
 			message.setJMSDestination(queue);
 			logger.debug("将消息放入分发队列:【{}】", message);
-			
+			queue.putMessage(message);
 			
 		} else if(destination instanceof Topic) {
 			logger.debug("主题消息【{}】", message);

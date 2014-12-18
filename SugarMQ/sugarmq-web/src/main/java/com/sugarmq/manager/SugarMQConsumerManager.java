@@ -71,11 +71,22 @@ public class SugarMQConsumerManager {
 		customerMap.put(customerId, sendMessageQueue);
 		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQMessageContainer)message.
 				getJMSDestination()).getQueueName(), new ErgodicArray<String>());
+		
+		if(ergodicArray == null) {
+			ergodicArray = destinationMap.get(((SugarMQMessageContainer)message.
+				getJMSDestination()).getQueueName());
+		}
+		
 		ergodicArray.add(customerId);
 		
 		SugarMQMessageContainer container = (SugarMQMessageContainer) message.getJMSDestination();
 		SugarMQConsumerDispatcher sugarMQConsumerDispatcher = consumerDispatcherMap.putIfAbsent(container.getName(), 
 				new SugarMQConsumerDispatcher(this, container));
+		
+		if(sugarMQConsumerDispatcher == null) {
+			sugarMQConsumerDispatcher = consumerDispatcherMap.get(container.getName());
+		}
+		
 		if(!sugarMQConsumerDispatcher.isStart()) {
 			sugarMQConsumerDispatcher.start();
 		}

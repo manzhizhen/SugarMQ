@@ -87,6 +87,11 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 	}
 
 
+	public Destination getDestination() {
+		return destination;
+	}
+
+	
 
 	
 	

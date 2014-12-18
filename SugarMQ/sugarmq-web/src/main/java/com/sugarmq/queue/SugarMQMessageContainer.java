@@ -8,14 +8,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.Topic;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageContainerType;
+import com.sugarmq.message.SugarDestination;
 
 /**
  * 队列和主题的消息容器
@@ -23,14 +22,15 @@ import com.sugarmq.constant.MessageContainerType;
  * @author manzhizhen
  *
  */
-public class SugarMQMessageContainer implements Queue, Topic{
-	private String name;
+public class SugarMQMessageContainer extends SugarDestination {
+	private static final long serialVersionUID = 2122365866558582491L;
+
 	private String type;
 	
 	// 待发送消息队列
-	private LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
+	private transient LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
 	// 已发送的消息队列
-	private LinkedBlockingQueue<Message> consumeMessageQueue = new LinkedBlockingQueue<Message>();
+	private transient LinkedBlockingQueue<Message> consumeMessageQueue = new LinkedBlockingQueue<Message>();
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQMessageContainer.class);
 	
@@ -43,19 +43,6 @@ public class SugarMQMessageContainer implements Queue, Topic{
 		this.type = type;
 	}
 	
-	@Override
-	public String getTopicName() throws JMSException {
-		return name;
-	}
-	
-	@Override
-	public String getQueueName() throws JMSException {
-		return name;
-	}
-	
-	public String getName() {
-		return name;
-	}
 	
 	public boolean isQueue() {
 		return MessageContainerType.QUEUE.getValue().equals(type);

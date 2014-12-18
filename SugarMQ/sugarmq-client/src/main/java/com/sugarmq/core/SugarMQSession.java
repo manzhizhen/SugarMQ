@@ -85,6 +85,7 @@ public class SugarMQSession implements Session{
 		}
 		
 		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(destination);
+		messageDispatcher.addConsumer(sugarQueueReceiver);
 		return sugarQueueReceiver;
 	}
 
