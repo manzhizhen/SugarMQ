@@ -53,7 +53,7 @@ public class SugarMQConsumerDispatcher {
 	}
 	
 	public void start() {
-		logger.info("SugarMQCustomerDispatcher准备开始工作... ...");
+		logger.info("SugarMQConsumerDispatcher准备开始工作... ...");
 		
 		dispatcherThread = new Thread(new Runnable() {
 			@Override
@@ -62,6 +62,7 @@ public class SugarMQConsumerDispatcher {
 				while(true) {
 					try {
 						message = sugarMQMessageContainer.takeMessage();
+						logger.debug("从SugarMQMessageContainer中拉取了一条消息:【{}】", message);
 						sugarMQCustomerManager.putMessageToCustomerQueue(message);
 					} catch (JMSException e) {
 						logger.info("SugarMQCustomerDispatcher被中断！");

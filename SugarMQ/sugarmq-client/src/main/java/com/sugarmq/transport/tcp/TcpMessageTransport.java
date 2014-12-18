@@ -143,6 +143,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 					new Runnable() {
 						@Override
 						public void run() {
+							logger.debug("TcpMessageTransport消息接收线程启动【{}】", this);
 							receiveMessage();
 						}
 					}
@@ -159,6 +160,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 					new Runnable() {
 						@Override
 						public void run() {
+							logger.debug("TcpMessageTransport消息发送线程启动【{}】", this);
 							sendMessage();
 						}
 					}
@@ -231,6 +233,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 		while(true) {
 			try {
 				message = sendMessageQueue.take();
+				logger.debug("从待发送队列中取出一条消息准备发送：【{}】", message);
 			} catch (InterruptedException e1) {
 				logger.info("TcpMessageTransport消息发送线程被要求停止！");
 				break ;

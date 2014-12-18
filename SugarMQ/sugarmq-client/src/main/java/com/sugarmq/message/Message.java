@@ -22,8 +22,8 @@ public abstract class Message implements javax.jms.Message, Serializable{
 	protected int priority;		// 优先级
 	protected boolean redelivered;	// 重传标记
 	protected String messageType;	// 消息类型
-	protected SugarDestination destination;
-	protected SugarDestination replyDestination;
+	protected SugarMQDestination destination;
+	protected SugarMQDestination replyDestination;
 	
 	protected Map<String, Boolean> booleanMap = new HashMap<String, Boolean>(5);
 	protected Map<String, Byte> byteMap = new HashMap<String, Byte>(5);
@@ -42,7 +42,7 @@ public abstract class Message implements javax.jms.Message, Serializable{
 
 	@Override
 	public void setJMSReplyTo(Destination replyDestination) throws JMSException {
-		this.replyDestination = (SugarDestination) replyDestination;
+		this.replyDestination = (SugarMQDestination) replyDestination;
 	}
 	
 	@Override
@@ -116,7 +116,7 @@ public abstract class Message implements javax.jms.Message, Serializable{
 	
 	@Override
 	public void setJMSDestination(Destination destination) throws JMSException {
-		this.destination = (SugarDestination) destination;
+		this.destination = (SugarMQDestination) destination;
 	}
 	
 	@Override

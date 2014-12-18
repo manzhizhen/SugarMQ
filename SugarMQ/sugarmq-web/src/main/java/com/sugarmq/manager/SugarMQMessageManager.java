@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component;
 
 import com.sugarmq.constant.MessageContainerType;
 import com.sugarmq.constant.MessageProperty;
+import com.sugarmq.message.SugarMQDestination;
 import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.queue.SugarMQMessageContainer;
-import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.util.MessageIdGenerate;
 
 /**
@@ -61,12 +61,7 @@ public class SugarMQMessageManager {
 			// 将消息放入消息队列
 			String name = ((javax.jms.Queue) destination).getQueueName();
 			
-			SugarMQMessageContainer queue = messageContainerMap.putIfAbsent(name, new SugarMQMessageContainer(name, 
-					MessageContainerType.QUEUE.getValue()));
-			
-			if(queue == null) {
-				queue = messageContainerMap.get(name);
-			}
+			SugarMQMessageContainer queue = getSugarMQMessageContainer(name);
 			
 			if (messageContainerMap.size() >= MAX_QUEUE_NUM) {
 				logger.warn("MOM中队列数已满，添加队列失败:【{}】", name);
@@ -82,13 +77,24 @@ public class SugarMQMessageManager {
 		}
 	}
 	
+	public SugarMQMessageContainer getSugarMQMessageContainer(String name) {
+		SugarMQMessageContainer queue = messageContainerMap.putIfAbsent(name, new SugarMQMessageContainer(name, 
+				MessageContainerType.QUEUE.getValue()));
+		
+		if(queue == null) {
+			queue = messageContainerMap.get(name);
+		}
+		
+		return queue;
+	}
+	
 	/**
 	 * 将一个消息从消息队列中移除
 	 * @param message
 	 */
 	public void removeMessage(Message message) throws JMSException{
 		// 将消息放入消息队列
-		SugarQueue sugarQueue = (SugarQueue) message.getJMSDestination();
+		SugarMQDestination sugarQueue = (SugarMQDestination) message.getJMSDestination();
 		SugarMQMessageContainer queue = messageContainerMap.get(sugarQueue.getQueueName());
 		
 		if(queue != null) {

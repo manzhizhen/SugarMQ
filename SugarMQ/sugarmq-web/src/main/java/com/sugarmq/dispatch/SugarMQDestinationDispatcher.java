@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.manager.SugarMQConsumerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
+import com.sugarmq.message.SugarMQDestination;
 import com.sugarmq.message.bean.SugarMQMessage;
 
 /**
@@ -88,6 +89,8 @@ public class SugarMQDestinationDispatcher {
 						// 消费者注册消息
 						} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
 								equals(message.getJMSType())) {
+							SugarMQDestination dest = (SugarMQDestination) message.getJMSDestination();
+							message.setJMSDestination(sugarMQMessageManager.getSugarMQMessageContainer(dest.getName()));
 							sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
 						
 						// 消费者拉取消息

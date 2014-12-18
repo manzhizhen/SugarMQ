@@ -9,12 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.MessageContainerType;
-import com.sugarmq.message.SugarDestination;
+import com.sugarmq.message.SugarMQDestination;
 
 /**
  * 队列和主题的消息容器
@@ -22,10 +20,8 @@ import com.sugarmq.message.SugarDestination;
  * @author manzhizhen
  *
  */
-public class SugarMQMessageContainer extends SugarDestination {
+public class SugarMQMessageContainer extends SugarMQDestination {
 	private static final long serialVersionUID = 2122365866558582491L;
-
-	private String type;
 	
 	// 待发送消息队列
 	private transient LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
@@ -35,21 +31,7 @@ public class SugarMQMessageContainer extends SugarDestination {
 	private static Logger logger = LoggerFactory.getLogger(SugarMQMessageContainer.class);
 	
 	public SugarMQMessageContainer(String name, String type) {
-		if(StringUtils.isBlank(name) || StringUtils.isBlank(type)) {
-			throw new IllegalArgumentException();
-		}
-		
-		this.name = name;
-		this.type = type;
-	}
-	
-	
-	public boolean isQueue() {
-		return MessageContainerType.QUEUE.getValue().equals(type);
-	}
-	
-	public boolean isTopic() {
-		return MessageContainerType.TOPIC.getValue().equals(type);
+		super(name, type);
 	}
 	
 	/**

@@ -160,8 +160,10 @@ public class MessageDispatcher {
 		addConsumerMsg.setJMSDestination(consumer.getDestination());
 		
 		DataCountDownLatch<Message> dataCountDownLatch = new DataCountDownLatch<Message>(1);
+		logger.debug("将即将注册的消费者放入addConsumerAckMap：【{}】", messageConsumer);
 		addConsumerAckMap.put(consumerId, dataCountDownLatch);
 		try {
+			logger.debug("将消费者注册消息放入发送队列：【{}】", addConsumerMsg);
 			sendMessageQueue.put(addConsumerMsg);
 			dataCountDownLatch.await();
 		} catch (InterruptedException e) {

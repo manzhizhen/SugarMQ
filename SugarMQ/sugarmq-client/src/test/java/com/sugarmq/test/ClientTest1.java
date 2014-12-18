@@ -14,18 +14,19 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import com.sugarmq.constant.MessageContainerType;
 import com.sugarmq.core.SugarMQConnectionFactory;
-import com.sugarmq.queue.SugarQueue;
+import com.sugarmq.message.SugarMQDestination;
 
 public class ClientTest1 {
 	public static void main(String[] args) {
 		try {
-			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://10.79.6.181:1314");
+			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://169.254.69.138:1314");
 			Connection connection = facotory.createConnection();
 			connection.start();
 			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			
-			Queue queue = new SugarQueue("manzhizhen");
+			Queue queue = new SugarMQDestination("manzhizhen", MessageContainerType.QUEUE.getValue());
 			
 			MessageConsumer consumer = session.createConsumer(queue);
 			consumer.setMessageListener(new MessageListener() {
@@ -39,14 +40,14 @@ public class ClientTest1 {
 				}
 			});
 			
+			System.out.println("消费者创建完毕！");
+			
 			TextMessage textMessage = session.createTextMessage();
 			textMessage.setText("Do you love me?");
 			
 			MessageProducer sender = session.createProducer(queue);
 			sender.send(textMessage);
 			System.out.println("消息发送完毕！！！");
-			
-			
 			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 			while(true) {

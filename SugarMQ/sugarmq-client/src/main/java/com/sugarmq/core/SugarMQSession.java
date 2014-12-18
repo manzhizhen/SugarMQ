@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.consumer.SugarMQMessageConsumer;
+import com.sugarmq.message.SugarMQDestination;
 import com.sugarmq.message.bean.SugarMQTextMessage;
 import com.sugarmq.producer.SugarMQMessageProducer;
-import com.sugarmq.queue.SugarQueue;
 import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.util.SessionIdGenerate;
 
@@ -79,7 +79,7 @@ public class SugarMQSession implements Session{
 
 	@Override
 	public MessageConsumer createConsumer(Destination destination) throws JMSException {
-		if(!(destination instanceof SugarQueue)) {
+		if(!(destination instanceof SugarMQDestination)) {
 			logger.warn("传入的Destination非法！");
 			throw new JMSException("传入的Destination非法:" + destination);
 		}
@@ -144,7 +144,7 @@ public class SugarMQSession implements Session{
 
 	@Override
 	public MessageProducer createProducer(Destination destination) throws JMSException {
-		if(!(destination instanceof SugarQueue)) {
+		if(!(destination instanceof SugarMQDestination)) {
 			logger.warn("传入的Destination非法！");
 			throw new JMSException("传入的Destination非法！");
 		}

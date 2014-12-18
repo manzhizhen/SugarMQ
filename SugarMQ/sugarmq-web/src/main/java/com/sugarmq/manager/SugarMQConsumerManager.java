@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.dispatch.SugarMQConsumerDispatcher;
+import com.sugarmq.message.SugarMQDestination;
 import com.sugarmq.queue.SugarMQMessageContainer;
 import com.sugarmq.util.DateUtils;
 
@@ -69,11 +70,11 @@ public class SugarMQConsumerManager {
 		}
 		
 		customerMap.put(customerId, sendMessageQueue);
-		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQMessageContainer)message.
+		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQDestination)message.
 				getJMSDestination()).getQueueName(), new ErgodicArray<String>());
 		
 		if(ergodicArray == null) {
-			ergodicArray = destinationMap.get(((SugarMQMessageContainer)message.
+			ergodicArray = destinationMap.get(((SugarMQDestination)message.
 				getJMSDestination()).getQueueName());
 		}
 		
@@ -100,6 +101,8 @@ public class SugarMQConsumerManager {
 		if(message == null) {
 			throw new IllegalArgumentException("Message不能为空！");
 		}
+		
+		logger.debug("准备将消息推送到一个消费者的待发送队列中【{}】", message);
 		
 		SugarMQMessageContainer sugarMQMessageContainer = (SugarMQMessageContainer) message.getJMSDestination();
 		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(sugarMQMessageContainer.getQueueName(), new ErgodicArray<String>());
