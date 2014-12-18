@@ -38,6 +38,8 @@ public class SugarMQConnection implements Connection{
 		this.sugarMQTransport = sugarMQTransport;
 		messageDispatcher = new MessageDispatcher(sugarMQTransport.getReceiveMessageQueue(), 
 				sugarMQTransport.getSendMessageQueue());
+		
+		messageDispatcher.start();
 	}
 
 	@Override

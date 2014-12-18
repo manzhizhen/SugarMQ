@@ -11,9 +11,8 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
-import com.sugarmq.manager.SugarMQCustomerManager;
+import com.sugarmq.manager.SugarMQConsumerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
 import com.sugarmq.message.bean.SugarMQBytesMessage;
 
@@ -27,14 +26,14 @@ public class SugarMQDestinationDispatcher {
 	private BlockingQueue<Message> receiveMessageQueue;
 	private BlockingQueue<Message> sendMessageQueue;
 	private SugarMQMessageManager sugarMQMessageManager;
-	private SugarMQCustomerManager sugarMQCustomerManager;
+	private SugarMQConsumerManager sugarMQCustomerManager;
 	private Thread dispatcherThread;
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQDestinationDispatcher.class);
 	
 	public SugarMQDestinationDispatcher(BlockingQueue<Message> receiveMessageQueue, 
 			BlockingQueue<Message> sendMessageQueue, SugarMQMessageManager sugarMQMessageManager, 
-			SugarMQCustomerManager sugarMQCustomerManager) {
+			SugarMQConsumerManager sugarMQCustomerManager) {
 		if(receiveMessageQueue == null || sendMessageQueue == null || sugarMQMessageManager == null
 				|| sugarMQCustomerManager == null) {
 			throw new IllegalArgumentException();
@@ -69,12 +68,11 @@ public class SugarMQDestinationDispatcher {
 					try {
 						// 生产者消息
 						if(MessageType.PRODUCER_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							sugarMQMessageManager.addMessage(message);
 							// 创建应答消息
 							SugarMQBytesMessage answerMessage = new SugarMQBytesMessage();
-							answerMessage.setStringProperty(MessageProperty.MESSAGE_TYPE.getKey(), 
-									MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
+							answerMessage.setJMSType(MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue());
 							answerMessage.setJMSMessageID(message.getJMSMessageID());
 							try {
 								sendMessageQueue.put(answerMessage);
@@ -84,17 +82,17 @@ public class SugarMQDestinationDispatcher {
 						
 						// 消费者应答消息
 						} else if(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							sugarMQMessageManager.removeMessage(message);
 						
 						// 消费者注册消息
 						} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
 						
 						// 消费者拉取消息
 						} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							// TODO:
 							
 						} else {

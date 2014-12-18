@@ -8,9 +8,6 @@ import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 
 
@@ -39,8 +36,6 @@ public abstract class Message implements javax.jms.Message, Serializable{
 	protected Map<String, Object> objectMap = new HashMap<String, Object>(5);
 	
 	public static final int OBJECT_BYTE_SIZE = 2048;
-	
-	private transient Logger logger = LoggerFactory.getLogger(Message.class);
 	
 	public Message() {
 	}
@@ -240,6 +235,7 @@ public abstract class Message implements javax.jms.Message, Serializable{
 		stringMap.put(key, value);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Enumeration getPropertyNames() throws JMSException {
 		// TODO Auto-generated method stub

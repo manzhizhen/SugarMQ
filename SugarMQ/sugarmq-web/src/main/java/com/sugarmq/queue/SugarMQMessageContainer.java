@@ -53,6 +53,10 @@ public class SugarMQMessageContainer implements Queue, Topic{
 		return name;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	public boolean isQueue() {
 		return MessageContainerType.QUEUE.getValue().equals(type);
 	}

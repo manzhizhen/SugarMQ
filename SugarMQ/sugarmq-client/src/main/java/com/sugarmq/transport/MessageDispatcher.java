@@ -82,7 +82,7 @@ public class MessageDispatcher {
 					try {
 						// 生产者应答消息
 						if(MessageType.PRODUCER_ACKNOWLEDGE_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							logger.debug("客户端接收到服务端的生产者应答消息:{}", message);
 							CountDownLatch countDownLatch = producerAckMap.get(message.getJMSMessageID());
 							if(countDownLatch != null) {
@@ -92,7 +92,7 @@ public class MessageDispatcher {
 						
 						// 要分配给消费者的消息
 						} else if(MessageType.PRODUCER_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							logger.debug("客户端接收到要分配给消费者的消息:{}", message);
 							String customerId = message.getStringProperty(MessageProperty.CUSTOMER_ID.getKey());
 							if(StringUtils.isBlank(customerId)) {
@@ -107,7 +107,7 @@ public class MessageDispatcher {
 							
 						// 消费者注册应答消息	
 						} else if(MessageType.CUSTOMER_REGISTER_ACKNOWLEDGE_MESSAGE.getValue().
-								equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))) {
+								equals(message.getJMSType())) {
 							logger.debug("客户端接收到服务器发来的发来消费者注册应答消息:{}", message);
 							String customerId = message.getStringProperty(MessageProperty.CUSTOMER_ID.getKey());
 							String customerClientId = message.getStringProperty(MessageProperty.CUSTOMER_CLIENT_ID.getKey());
@@ -150,7 +150,7 @@ public class MessageDispatcher {
 		String consumerId = consumer.getConsumerId();
 		Message addConsumerMsg = new SugarMQMessage();
 		addConsumerMsg.setStringProperty(MessageProperty.CUSTOMER_CLIENT_ID.getKey(), consumerId);
-		addConsumerMsg.setStringProperty(MessageProperty.MESSAGE_TYPE.getKey(), MessageType.CUSTOMER_REGISTER_MESSAGE.getValue());
+		addConsumerMsg.setJMSType(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue());
 		
 		DataCountDownLatch<Message> dataCountDownLatch = new DataCountDownLatch<Message>(1);
 		addConsumerAckMap.put(consumerId, dataCountDownLatch);

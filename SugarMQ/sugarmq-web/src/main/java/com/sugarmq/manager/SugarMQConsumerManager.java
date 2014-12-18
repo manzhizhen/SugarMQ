@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
+import com.sugarmq.dispatch.SugarMQConsumerDispatcher;
 import com.sugarmq.queue.SugarMQMessageContainer;
 import com.sugarmq.util.DateUtils;
 
@@ -33,7 +34,7 @@ import com.sugarmq.util.DateUtils;
  * 2014年12月12日
  */
 @Component
-public class SugarMQCustomerManager {
+public class SugarMQConsumerManager {
 	// key-客户端消费者ID, value-SugarMQServerTransport的sendMessageQueue
 	private ConcurrentHashMap<String, BlockingQueue<Message>> customerMap = 
 			new ConcurrentHashMap<String, BlockingQueue<Message>>();
@@ -42,16 +43,21 @@ public class SugarMQCustomerManager {
 	private ConcurrentHashMap<String,  ErgodicArray<String>> destinationMap = 
 			new ConcurrentHashMap<String,  ErgodicArray<String>>();
 	
-	private Logger logger = LoggerFactory.getLogger(SugarMQCustomerManager.class);
+	// 消息分发器
+	private ConcurrentHashMap<String, SugarMQConsumerDispatcher> consumerDispatcherMap = 
+			new ConcurrentHashMap<String, SugarMQConsumerDispatcher>();
+	
+	private Logger logger = LoggerFactory.getLogger(SugarMQConsumerManager.class);
 	
 	/**
 	 * 新注册一个消费者
+	 * 只有新注册消费者才会触发新建消费者分发器SugarMQConsumerDispatcher对象
 	 * @param message
 	 * @throws JMSException 
 	 */
 	public void addCustomer(Message message, BlockingQueue<Message> sendMessageQueue) throws JMSException {
 		if(message == null || !MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
-				equals(message.getStringProperty(MessageProperty.MESSAGE_TYPE.getKey()))
+				equals(message.getJMSType())
 				|| sendMessageQueue == null) {
 			throw new IllegalArgumentException();
 		}
@@ -66,6 +72,13 @@ public class SugarMQCustomerManager {
 		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQMessageContainer)message.
 				getJMSDestination()).getQueueName(), new ErgodicArray<String>());
 		ergodicArray.add(customerId);
+		
+		SugarMQMessageContainer container = (SugarMQMessageContainer) message.getJMSDestination();
+		SugarMQConsumerDispatcher sugarMQConsumerDispatcher = consumerDispatcherMap.putIfAbsent(container.getName(), 
+				new SugarMQConsumerDispatcher(this, container));
+		if(!sugarMQConsumerDispatcher.isStart()) {
+			sugarMQConsumerDispatcher.start();
+		}
 	}
 	
 	/**

@@ -16,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
+import com.sugarmq.dispatch.SugarMQDestinationDispatcher;
+import com.sugarmq.manager.SugarMQConsumerManager;
+import com.sugarmq.manager.SugarMQMessageManager;
 import com.sugarmq.transport.SugarMQTransprotCenter;
 
 /**
@@ -30,8 +33,12 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 	private InetAddress inetAddress;
 	private int port;
 	private ServerSocket serverSocket;
-	private ConcurrentHashMap<Socket, TcpSugarMQServerTransport> transprotMap = 
-			new ConcurrentHashMap<Socket, TcpSugarMQServerTransport>();
+	
+	private SugarMQMessageManager sugarMQMessageManager;
+	private SugarMQConsumerManager sugarMQCustomerManager;
+	
+	private ConcurrentHashMap<TcpSugarMQServerTransport, SugarMQDestinationDispatcher> transprotMap = 
+			new ConcurrentHashMap<TcpSugarMQServerTransport, SugarMQDestinationDispatcher>();
 	
 	private @Value("${transport-backlog}") int backlog;
 	
@@ -57,13 +64,18 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 		}
 		
 		TcpSugarMQServerTransport tcpSugarMQServerTransport = null;
+		SugarMQDestinationDispatcher sugarMQDestinationDispatcher = null;
 		Socket socket = null;
 		while(true) {
 			try {
 				socket = serverSocket.accept();
 				tcpSugarMQServerTransport = new TcpSugarMQServerTransport(socket);
+				sugarMQDestinationDispatcher = new SugarMQDestinationDispatcher(tcpSugarMQServerTransport.getReceiveMessageQueue(), 
+						tcpSugarMQServerTransport.getSendMessageQueue(), sugarMQMessageManager, sugarMQCustomerManager);
 				tcpSugarMQServerTransport.start();
-				transprotMap.put(socket, tcpSugarMQServerTransport);
+				sugarMQDestinationDispatcher.start();
+				
+				transprotMap.put(tcpSugarMQServerTransport, sugarMQDestinationDispatcher);
 //				new Thread(new TcpReceiveThread(sugarQueueManager, this)).start();
 			} catch (IOException e) {
 				logger.error("TcpSugarMQServerTransport启动失败：", e);
@@ -74,8 +86,9 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 	@Override
 	public void close() throws JMSException {
 		logger.info("TcpSugarMQTransprotCenter正在关闭... ...");
-		for(Map.Entry<Socket, TcpSugarMQServerTransport> entry : transprotMap.entrySet()) {
-			entry.getValue().close();
+		for(Map.Entry<TcpSugarMQServerTransport, SugarMQDestinationDispatcher> entry : transprotMap.entrySet()) {
+			entry.getKey().close();
+			entry.getValue().stop();
 		}
 		
 		try {
@@ -84,5 +97,18 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 			logger.error("关闭ServerSocket异常", e);
 			throw new JMSException(String.format("关闭ServerSocket异常:{}", e.getMessage()));
 		}
+	}
+
+	@Override
+	public void setSugarMQCustomerManager(
+			SugarMQConsumerManager sugarMQCustomerManager) {
+		this.sugarMQCustomerManager = sugarMQCustomerManager;
+		
+	}
+
+	@Override
+	public void setSugarMQMessageManager(
+			SugarMQMessageManager sugarMQMessageManager) {
+		this.sugarMQMessageManager = sugarMQMessageManager;
 	}
 }

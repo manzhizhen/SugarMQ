@@ -11,6 +11,7 @@ import javax.jms.Topic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +37,10 @@ public class SugarMQMessageManager {
 	private ConcurrentHashMap<String, SugarMQMessageContainer> messageContainerMap = 
 			new ConcurrentHashMap<String, SugarMQMessageContainer>();
 	
+
+	@Autowired
+	private SugarMQConsumerManager sugarMQConsumerManager;
+	
 	private Logger logger = LoggerFactory.getLogger(SugarMQMessageManager.class);
 	
 	/**
@@ -55,6 +60,7 @@ public class SugarMQMessageManager {
 			
 			// 将消息放入消息队列
 			String name = ((javax.jms.Queue) destination).getQueueName();
+			
 			SugarMQMessageContainer queue = messageContainerMap.putIfAbsent(name, new SugarMQMessageContainer(name, 
 					MessageContainerType.QUEUE.getValue()));
 			

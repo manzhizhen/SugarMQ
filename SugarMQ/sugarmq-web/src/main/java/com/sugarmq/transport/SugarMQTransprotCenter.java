@@ -5,6 +5,9 @@ package com.sugarmq.transport;
 
 import javax.jms.JMSException;
 
+import com.sugarmq.manager.SugarMQConsumerManager;
+import com.sugarmq.manager.SugarMQMessageManager;
+
 /**
  * 类说明：
  *
@@ -17,4 +20,8 @@ public interface SugarMQTransprotCenter {
 	public void start() throws JMSException;
 	
 	public void close() throws JMSException;
+	
+	public void setSugarMQCustomerManager(SugarMQConsumerManager sugarMQCustomerManager);
+	
+	public void setSugarMQMessageManager(SugarMQMessageManager sugarMQMessageManager);
 }

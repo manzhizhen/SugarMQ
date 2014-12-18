@@ -160,7 +160,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 			
 			logger.error("Socket状态异常，TcpSugarMQServerTransport消息接收线程结束！");
 		} catch (Exception e) {
-			logger.error("TcpSugarMQServerTransport消息接收线程错误：{}", e);
+			logger.error("TcpSugarMQServerTransport消息接收线程错误", e);
 		}
 	}
 	

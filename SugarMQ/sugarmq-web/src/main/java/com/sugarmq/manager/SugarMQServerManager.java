@@ -34,7 +34,9 @@ public class SugarMQServerManager {
 	String uri;
 	
 	@Autowired
-	private SugarMQMessageManager sugarQueueManager;
+	private SugarMQMessageManager sugarMQMessageManager;
+	@Autowired
+	private SugarMQConsumerManager sugarMQConsumerManager;
 	@Autowired
 	private ConnectionPoolManager connectionPoolManager;
 	@Autowired
@@ -55,6 +57,8 @@ public class SugarMQServerManager {
 		connectionPoolManager.init();
 		sugarMQTransprotCenter = sugarMQServerTransportFactory
 				.createSugarMQTransport(uri);
+		sugarMQTransprotCenter.setSugarMQCustomerManager(sugarMQConsumerManager);
+		sugarMQTransprotCenter.setSugarMQMessageManager(sugarMQMessageManager);
 
 		// 创建和JVM进程可用内核数一样的线程数
 //		executorService = Executors.newFixedThreadPool(Runtime.getRuntime()
@@ -72,7 +76,7 @@ public class SugarMQServerManager {
 		}).start();
 		
 		START_STATUS.set(true);
-		logger.info("Sugar启动完毕！");
+		logger.info("Sugar启动完毕:{}", uri);
 
 	}
 
