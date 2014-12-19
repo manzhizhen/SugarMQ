@@ -174,6 +174,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 		while(true) {
 			try {
 				message = sendMessageQueue.take();
+				logger.debug("即将发送消息：【{}】", message);
 			} catch (InterruptedException e1) {
 				logger.info("TcpSugarMQServerTransport消息发送线程被要求停止！");
 				break ;
@@ -189,7 +190,7 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 					
 					socket.getOutputStream().write(byteArrayOutputStream.toByteArray());
 					byteArrayOutputStream.flush();
-					
+					logger.debug("消息发送完毕：【{}】", message);
 				} catch (IOException e) {
 					logger.error("消息【{}】发送失败失败：{}", message, e);
 					

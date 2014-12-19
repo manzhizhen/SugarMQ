@@ -70,6 +70,8 @@ public class SugarMQDestinationDispatcher {
 						// 生产者消息
 						if(MessageType.PRODUCER_MESSAGE.getValue().
 								equals(message.getJMSType())) {
+							logger.debug("生产者消息【{}】", message);
+							
 							sugarMQMessageManager.addMessage(message);
 							// 创建应答消息
 							SugarMQMessage answerMessage = new SugarMQMessage();
@@ -78,17 +80,21 @@ public class SugarMQDestinationDispatcher {
 							try {
 								sendMessageQueue.put(answerMessage);
 							} catch (InterruptedException e) {
-								logger.info("SugarMQQueueDispatcher被中断，即将退出.");
+								logger.info("生产者应答消息发送被中断.");
 							}
 						
 						// 消费者应答消息
 						} else if(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue().
 								equals(message.getJMSType())) {
+							logger.debug("消费者应答消息【{}】", message);
+							
 							sugarMQMessageManager.removeMessage(message);
 						
 						// 消费者注册消息
 						} else if(MessageType.CUSTOMER_REGISTER_MESSAGE.getValue().
 								equals(message.getJMSType())) {
+							logger.debug("消费者注册消息【{}】", message);
+							
 							SugarMQDestination dest = (SugarMQDestination) message.getJMSDestination();
 							message.setJMSDestination(sugarMQMessageManager.getSugarMQMessageContainer(dest.getName()));
 							sugarMQCustomerManager.addCustomer(message, sendMessageQueue);
@@ -96,6 +102,7 @@ public class SugarMQDestinationDispatcher {
 						// 消费者拉取消息
 						} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
 								equals(message.getJMSType())) {
+							logger.debug("消费者拉取消息【{}】", message);
 							// TODO:
 							
 						} else {

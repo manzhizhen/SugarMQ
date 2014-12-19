@@ -219,7 +219,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 			
 			logger.error("Socket状态异常，TcpMessageTransport接收消息线程结束！");
 		} catch (Exception e) {
-			logger.error("TcpMessageTransport消息接收线程错误：{}", e);
+			logger.error("TcpMessageTransport消息接收线程错误", e);
 		}
 	}
 	
@@ -233,7 +233,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 		while(true) {
 			try {
 				message = sendMessageQueue.take();
-				logger.debug("从待发送队列中取出一条消息准备发送：【{}】", message);
+				logger.debug("即将发送消息：【{}】", message);
 			} catch (InterruptedException e1) {
 				logger.info("TcpMessageTransport消息发送线程被要求停止！");
 				break ;
@@ -249,7 +249,7 @@ public class TcpMessageTransport extends SugarMQTransport{
 					
 					socket.getOutputStream().write(byteArrayOutputStream.toByteArray());
 					byteArrayOutputStream.flush();
-					
+					logger.debug("消息发送完毕：【{}】", message);
 				} catch (IOException e) {
 					logger.error("消息【{}】发送失败失败：{}", message, e);
 					

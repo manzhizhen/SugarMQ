@@ -21,7 +21,7 @@ import com.sugarmq.message.SugarMQDestination;
 public class ClientTest1 {
 	public static void main(String[] args) {
 		try {
-			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://169.254.69.138:1314");
+			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://10.79.6.181:1314");
 			Connection connection = facotory.createConnection();
 			connection.start();
 			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

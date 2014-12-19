@@ -23,6 +23,7 @@ import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.dispatch.SugarMQConsumerDispatcher;
 import com.sugarmq.message.SugarMQDestination;
+import com.sugarmq.message.bean.SugarMQMessage;
 import com.sugarmq.queue.SugarMQMessageContainer;
 import com.sugarmq.util.DateUtils;
 
@@ -63,8 +64,9 @@ public class SugarMQConsumerManager {
 			throw new IllegalArgumentException();
 		}
 		
-		String customerId = message.getStringProperty(MessageProperty.CUSTOMER_ID.getKey());
-		if(StringUtils.isBlank(customerId) || customerMap.containsKey(customerId)) {
+		String customerClientId = message.getStringProperty(MessageProperty.CUSTOMER_CLIENT_ID.getKey());
+		String customerId = customerClientId;
+		if(StringUtils.isBlank(customerClientId) || customerMap.containsKey(customerId)) {
 			logger.debug("客户端没有填写消费者ID【{}】", message);
 			customerId = getNewCustomerId();
 		}
@@ -85,12 +87,29 @@ public class SugarMQConsumerManager {
 				new SugarMQConsumerDispatcher(this, container));
 		
 		if(sugarMQConsumerDispatcher == null) {
+			logger.debug("该消费者监听的目的地还未配置消费者分发器【{}】", message);
 			sugarMQConsumerDispatcher = consumerDispatcherMap.get(container.getName());
+			logger.debug("新建消费者分发器【{}】", sugarMQConsumerDispatcher);
 		}
 		
 		if(!sugarMQConsumerDispatcher.isStart()) {
 			sugarMQConsumerDispatcher.start();
+			logger.debug("消费者分发器启动成功【{}】", sugarMQConsumerDispatcher);
 		}
+		
+		// 应答消费者注册
+		Message consumerAckMsg = new SugarMQMessage();
+		consumerAckMsg.setJMSType(MessageType.CUSTOMER_REGISTER_ACKNOWLEDGE_MESSAGE.getValue());
+		consumerAckMsg.setStringProperty(MessageProperty.CUSTOMER_CLIENT_ID.getKey(), customerClientId);
+		consumerAckMsg.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), customerId);
+		try {
+			sendMessageQueue.put(consumerAckMsg);
+			logger.debug("将消费者注册应答消息放入发送队列【{}】", consumerAckMsg);
+		} catch (InterruptedException e) {
+			logger.error("将消费者注册应答消息放入发送队列被中断【{}】", consumerAckMsg);
+		}
+		
+		
 	}
 	
 	/**
@@ -111,6 +130,8 @@ public class SugarMQConsumerManager {
 		
 		BlockingQueue<Message> queue = customerMap.get(nextCustomerId);
 		message.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), nextCustomerId);
+		SugarMQDestination dest = (SugarMQDestination) message.getJMSDestination();
+		message.setJMSDestination(new SugarMQDestination(dest.getName(), dest.getType()));
 		try {
 			queue.put(message);
 			destinationMap.get(sugarMQMessageContainer.getQueueName()).setValue(nextCustomerId, false);

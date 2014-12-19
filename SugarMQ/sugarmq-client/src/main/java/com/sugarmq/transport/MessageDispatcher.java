@@ -171,7 +171,7 @@ public class MessageDispatcher {
 		}
 		
 		Message ackMsg = dataCountDownLatch.getData();
-		
+		logger.debug("消费者注册消息得到应答：【{}】", ackMsg);
 		consumerId = ackMsg.getStringProperty(MessageProperty.CUSTOMER_ID.getKey());
 		consumer.setConsumerId(consumerId);
 		consumerMap.put(consumerId, consumer);
