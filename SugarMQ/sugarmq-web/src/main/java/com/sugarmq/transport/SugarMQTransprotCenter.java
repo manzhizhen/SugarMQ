@@ -21,6 +21,8 @@ public interface SugarMQTransprotCenter {
 	
 	public void close() throws JMSException;
 	
+	public void remove(SugarMQServerTransport sugarMQServerTransport);
+	
 	public void setSugarMQCustomerManager(SugarMQConsumerManager sugarMQCustomerManager);
 	
 	public void setSugarMQMessageManager(SugarMQMessageManager sugarMQMessageManager);

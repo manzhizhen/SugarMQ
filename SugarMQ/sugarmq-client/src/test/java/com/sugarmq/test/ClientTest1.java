@@ -21,7 +21,7 @@ import com.sugarmq.message.SugarMQDestination;
 public class ClientTest1 {
 	public static void main(String[] args) {
 		try {
-			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://10.79.6.181:1314");
+			SugarMQConnectionFactory facotory = new SugarMQConnectionFactory("tcp://169.254.69.138:1314");
 			Connection connection = facotory.createConnection();
 			connection.start();
 			Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -33,7 +33,31 @@ public class ClientTest1 {
 				@Override
 				public void onMessage(Message msg) {
 					try {
-						System.out.println("噢耶！客户端成功接收到消息：" + ((TextMessage)msg).getText());
+						System.out.println("consumer1：" + ((TextMessage)msg).getText());
+					} catch (JMSException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			
+			MessageConsumer consumer1 = session.createConsumer(queue);
+			consumer1.setMessageListener(new MessageListener() {
+				@Override
+				public void onMessage(Message msg) {
+					try {
+						System.out.println("consumer2：" + ((TextMessage)msg).getText());
+					} catch (JMSException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			
+			MessageConsumer consumer2 = session.createConsumer(queue);
+			consumer2.setMessageListener(new MessageListener() {
+				@Override
+				public void onMessage(Message msg) {
+					try {
+						System.out.println("consumer3：" + ((TextMessage)msg).getText());
 					} catch (JMSException e) {
 						e.printStackTrace();
 					}
@@ -46,7 +70,9 @@ public class ClientTest1 {
 			textMessage.setText("Do you love me?");
 			
 			MessageProducer sender = session.createProducer(queue);
-			sender.send(textMessage);
+			for(int i = 0; i < 6; i++) {
+				sender.send(textMessage);
+			}
 			System.out.println("消息发送完毕！！！");
 			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

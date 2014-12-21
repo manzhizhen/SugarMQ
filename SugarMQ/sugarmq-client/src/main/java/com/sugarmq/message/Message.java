@@ -248,4 +248,13 @@ public abstract class Message implements javax.jms.Message, Serializable{
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		try {
+			return messageId + " " + getJMSType();
+		} catch (JMSException e) {
+			return messageId;
+		}
+	}
 }

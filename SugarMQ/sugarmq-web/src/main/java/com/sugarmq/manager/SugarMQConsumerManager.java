@@ -134,7 +134,8 @@ public class SugarMQConsumerManager {
 		message.setJMSDestination(new SugarMQDestination(dest.getName(), dest.getType()));
 		try {
 			queue.put(message);
-			destinationMap.get(sugarMQMessageContainer.getQueueName()).setValue(nextCustomerId, false);
+			// 之所以给消费者推送消息设置阻塞开关，是为了防止消费者处理不过来造成消费者端消息堆积，这里暂时不设置阻塞
+//			destinationMap.get(sugarMQMessageContainer.getQueueName()).setValue(nextCustomerId, false);
 			logger.debug("成功将消息【{}】推送到消费者【{}】队列！", message, nextCustomerId);
 		} catch (InterruptedException e) {
 			logger.error("将消息【{}】推送到消费者【{}】队列失败！", message, nextCustomerId);

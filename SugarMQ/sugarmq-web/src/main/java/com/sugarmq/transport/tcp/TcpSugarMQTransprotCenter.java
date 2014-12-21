@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.sugarmq.dispatch.SugarMQDestinationDispatcher;
 import com.sugarmq.manager.SugarMQConsumerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
+import com.sugarmq.transport.SugarMQServerTransport;
 import com.sugarmq.transport.SugarMQTransprotCenter;
 
 /**
@@ -69,7 +70,7 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 		while(true) {
 			try {
 				socket = serverSocket.accept();
-				tcpSugarMQServerTransport = new TcpSugarMQServerTransport(socket);
+				tcpSugarMQServerTransport = new TcpSugarMQServerTransport(socket, this);
 				sugarMQDestinationDispatcher = new SugarMQDestinationDispatcher(tcpSugarMQServerTransport.getReceiveMessageQueue(), 
 						tcpSugarMQServerTransport.getSendMessageQueue(), sugarMQMessageManager, sugarMQCustomerManager);
 				tcpSugarMQServerTransport.start();
@@ -110,5 +111,16 @@ public class TcpSugarMQTransprotCenter implements SugarMQTransprotCenter{
 	public void setSugarMQMessageManager(
 			SugarMQMessageManager sugarMQMessageManager) {
 		this.sugarMQMessageManager = sugarMQMessageManager;
+	}
+
+	@Override
+	public void remove(SugarMQServerTransport sugarMQServerTransport) {
+		if(sugarMQServerTransport == null) {
+			throw new IllegalArgumentException("SugarMQServerTransport不能为空！");
+		}
+		
+		transprotMap.remove(sugarMQServerTransport);
+		
+		logger.debug("TcpSugarMQTransprotCenter已经移除了【{}】", sugarMQServerTransport);
 	}
 }

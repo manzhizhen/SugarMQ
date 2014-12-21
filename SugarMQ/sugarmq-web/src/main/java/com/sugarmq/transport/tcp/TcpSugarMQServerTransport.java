@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.transport.SugarMQServerTransport;
+import com.sugarmq.transport.SugarMQTransprotCenter;
 
 /**
  * 
@@ -38,17 +40,22 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	private Thread sendMessageThread;
 	private Thread receiveMessageThread;
 	
+	private AtomicBoolean isClosed = new AtomicBoolean(false);
+	
 	private byte[] objectByte = new byte[com.sugarmq.message.Message.OBJECT_BYTE_SIZE];
+	
+	private SugarMQTransprotCenter tcpSugarMQTransprotCenter;
 	
 	private Logger logger = LoggerFactory.getLogger(TcpSugarMQServerTransport.class);
 	
-	public TcpSugarMQServerTransport(Socket socket) {
+	public TcpSugarMQServerTransport(Socket socket, SugarMQTransprotCenter tcpSugarMQTransprotCenter) {
 		if(socket == null) {
 			logger.error("Socket对象不能为空！");
 			throw new IllegalArgumentException("Socket不能为空！");
 		}
 		
 		this.socket = socket;
+		this.tcpSugarMQTransprotCenter = tcpSugarMQTransprotCenter;
 	}
 	
 	@Override
@@ -98,26 +105,35 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 	
 	@Override
 	public void close() {
-		logger.debug("TcpSugarMQServerTransport即将被关闭！");
-		
-		if(sendMessageThread != null && Thread.State.TERMINATED != sendMessageThread.getState()) {
-			sendMessageThread.interrupt();
+		synchronized (isClosed) {
+			if(isClosed.get()) {
+				return ;
+			}
+			isClosed.set(true);
+			
+			logger.debug("TcpSugarMQServerTransport即将被关闭！");
+			
+			if(sendMessageThread != null && Thread.State.TERMINATED != sendMessageThread.getState()) {
+				sendMessageThread.interrupt();
+			}
+			
+			if(receiveMessageThread != null && Thread.State.TERMINATED != receiveMessageThread.getState()) {
+				receiveMessageThread.interrupt();
+			}
+			
+			try {
+				socket.close();
+			} catch (IOException e) {
+				logger.info("Socket关闭异常", e);
+			}
+			
+			sendMessageQueue.clear();
+			receiveMessageQueue.clear();
+			
+			tcpSugarMQTransprotCenter.remove(this);
+			
+			logger.debug("TcpSugarMQServerTransport已被关闭！");
 		}
-		
-		if(receiveMessageThread != null && Thread.State.TERMINATED != receiveMessageThread.getState()) {
-			receiveMessageThread.interrupt();
-		}
-		
-		try {
-			socket.close();
-		} catch (IOException e) {
-			logger.info("Socket关闭异常", e);
-		}
-		
-		sendMessageQueue.clear();
-		receiveMessageQueue.clear();
-		
-		logger.debug("TcpSugarMQServerTransport已被关闭！");
 	}
 
 	@Override
@@ -161,6 +177,8 @@ public class TcpSugarMQServerTransport implements SugarMQServerTransport {
 			logger.error("Socket状态异常，TcpSugarMQServerTransport消息接收线程结束！");
 		} catch (Exception e) {
 			logger.error("TcpSugarMQServerTransport消息接收线程错误", e);
+		} finally {
+			close();
 		}
 	}
 	
