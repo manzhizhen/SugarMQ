@@ -1,6 +1,8 @@
 package com.sugarmq.core;
 
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -24,9 +26,14 @@ import com.sugarmq.transport.SugarMQTransport;
  */
 public class SugarMQConnection implements Connection{
 	
+	private int customerBatchAckNum = 100;	// 批量消息应答数目
+	
 	private SugarMQTransport sugarMQTransport;
 	
 	private MessageDispatcher messageDispatcher;
+	
+	private AtomicBoolean isStarted = new AtomicBoolean(false);
+	private AtomicBoolean isClosed = new AtomicBoolean(false);
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQConnection.class);
 	
@@ -38,13 +45,24 @@ public class SugarMQConnection implements Connection{
 		this.sugarMQTransport = sugarMQTransport;
 		messageDispatcher = new MessageDispatcher(sugarMQTransport.getReceiveMessageQueue(), 
 				sugarMQTransport.getSendMessageQueue());
-		
-		messageDispatcher.start();
 	}
 
 	@Override
 	public void close() throws JMSException {
+		synchronized (isClosed) {
+			if(isClosed.get()) {
+				return ;
+			}
+			
+			isClosed.set(true);
+		}
+
+		logger.info("SugarMQConnection即将关闭... ...");
+		
+		messageDispatcher.close();
 		sugarMQTransport.close();
+		
+		logger.info("SugarMQConnection已经关闭！");
 	}
 
 	@Override
@@ -93,13 +111,38 @@ public class SugarMQConnection implements Connection{
 
 	@Override
 	public void start() throws JMSException {
-		logger.info("SugarMQConnection开始启动！");
-		sugarMQTransport.start();
+		synchronized (isStarted) {
+			if(isStarted.get()) {
+				return ;
+			}
+			
+			logger.info("SugarMQConnection开始启动！");
+			sugarMQTransport.start();
+			messageDispatcher.start();
+			
+			isStarted.set(true);
+		}
 	}
 
 	@Override
 	public void stop() throws JMSException {
 		sugarMQTransport.close();
 	}
+
+	public int getCustomerBatchAckNum() {
+		return customerBatchAckNum;
+	}
+
+	public void setCustomerBatchAckNum(int customerBatchAckNum) {
+		synchronized (isStarted) {
+			if(isStarted.get()) {
+				throw new IllegalStateException("SugarMQConnection已经开启，无法设置customerBatchAckNum！");
+			}
+			
+			this.customerBatchAckNum = customerBatchAckNum;
+		}
+	}
+	
+	
 
 }

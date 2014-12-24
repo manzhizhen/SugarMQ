@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -48,6 +49,8 @@ public class MessageDispatcher {
 	
 	private Thread dispatcherThread;
 	private ThreadPoolExecutor threadPoolExecutor;
+	
+	private AtomicBoolean isClosed = new AtomicBoolean(false);
 	
 	private Logger logger = LoggerFactory.getLogger(MessageDispatcher.class);
 	
@@ -199,6 +202,32 @@ public class MessageDispatcher {
 			logger.error("SugarMQMessageProducer消息发送被中断！");
 			throw new JMSException("SugarMQMessageProducer消息发送被中断:" + e.getMessage());
 		}
+		
+	}
+	
+	/**
+	 * 关闭消息分发器
+	 */
+	public void close() {
+		synchronized (isClosed) {
+			if(isClosed.get()) {
+				return ;
+			} else {
+				isClosed.set(true);
+			}
+		}
+		
+		logger.info("MessageDispatcher即将关闭... ...");
+
+		if(threadPoolExecutor != null) {
+			threadPoolExecutor.shutdown();
+		}
+		
+		if(dispatcherThread != null) {
+			dispatcherThread.interrupt();
+		}
+		
+		logger.info("MessageDispatcher已经关闭！");
 		
 	}
 	

@@ -3,7 +3,10 @@
  */
 package com.sugarmq.queue;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jms.JMSException;
@@ -24,9 +27,9 @@ public class SugarMQMessageContainer extends SugarMQDestination {
 	private static final long serialVersionUID = 2122365866558582491L;
 	
 	// 待发送消息队列
-	private transient LinkedBlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
+	private transient BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<Message>();
 	// 已发送的消息队列
-	private transient LinkedBlockingQueue<Message> consumeMessageQueue = new LinkedBlockingQueue<Message>();
+	private transient BlockingQueue<Message> consumeMessageQueue = new LinkedBlockingQueue<Message>();
 	
 	private static Logger logger = LoggerFactory.getLogger(SugarMQMessageContainer.class);
 	
@@ -66,6 +69,40 @@ public class SugarMQMessageContainer extends SugarMQDestination {
 		}
 		 
 		return message;
+	}
+	
+	/**
+	 * 从队列中获取最多指定数量消息
+	 * 没消息则阻塞，不保证能获取到指定数量的消息，但能保证至少返回一条消息
+	 * @return
+	 * @throws JMSException 
+	 */
+	public List<Message> takeMessage(int messageSize) throws JMSException {
+		if(messageSize <= 0) {
+			throw new IllegalArgumentException("指定的消息数量必须大于0！");
+		}
+		
+		List<Message> messageList = new ArrayList<Message>(messageSize);
+		 try {
+			 // 至少保证能取到一条消息
+			 messageList.add(messageQueue.take());
+			 
+			 // 尝试获取剩下的{@messageSize-1}条消息
+			 Message msg = null;
+			 for(int i = 1; i < messageSize; i++) {
+				 msg = messageQueue.poll();
+				 if(msg != null) {
+					 messageList.add(msg);
+				 }
+			 }
+			 
+			logger.debug("从队列【{}】尝试取出【{}】条消息:【{}】", name, messageSize, messageList);
+		} catch (InterruptedException e) {
+			logger.error("从队列【{}】获取消息失败:{}", name, e);
+			throw new JMSException(e.getMessage());
+		}
+		 
+		return messageList;
 	}
 	
 	/**
