@@ -37,8 +37,6 @@ public class SugarMQConnectionFactory implements ConnectionFactory,
 	@Override
 	public Connection createConnection() throws JMSException {
 		return new SugarMQConnection(sugarMQTransport);
-		
-		
 
 	}
 

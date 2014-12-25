@@ -1,14 +1,16 @@
 package com.sugarmq.message.bean;
 
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 
 public class SugarMQMapMessage extends SugarMQMessage implements MapMessage{
-	/**
-	 * @param sugarMQTransport
-	 */
+	private ConcurrentMap<String, Object> map = new ConcurrentHashMap<String, Object>();
+	
 	public SugarMQMapMessage() {
 		super();
 	}
@@ -16,154 +18,130 @@ public class SugarMQMapMessage extends SugarMQMessage implements MapMessage{
 	private static final long serialVersionUID = 2190580576217128868L;
 
 	@Override
-	public boolean getBoolean(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean getBoolean(String key) throws JMSException {
+		return (boolean) map.get(key);
 	}
 
 	@Override
-	public byte getByte(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public byte getByte(String key) throws JMSException {
+		return (byte) map.get(key);
 	}
 
 	@Override
-	public byte[] getBytes(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+	public byte[] getBytes(String key) throws JMSException {
+		return (byte[]) map.get(key);
 	}
 
 	@Override
-	public char getChar(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public char getChar(String key) throws JMSException {
+		return (char) map.get(key);
 	}
 
 	@Override
-	public double getDouble(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public double getDouble(String key) throws JMSException {
+		return (double) map.get(key);
 	}
 
 	@Override
-	public float getFloat(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public float getFloat(String key) throws JMSException {
+		return (float) map.get(key);
 	}
 
 	@Override
-	public int getInt(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public int getInt(String key) throws JMSException {
+		return (int) map.get(key);
 	}
 
 	@Override
-	public long getLong(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public long getLong(String key) throws JMSException {
+		return (long) map.get(key);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Enumeration<String> getMapNames() throws JMSException {
+		return (Enumeration<String>) map.keySet();
 	}
 
 	@Override
-	public Enumeration getMapNames() throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+	public Object getObject(String key) throws JMSException {
+		return map.get(key);
 	}
 
 	@Override
-	public Object getObject(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+	public short getShort(String key) throws JMSException {
+		return (short) map.get(key);
 	}
 
 	@Override
-	public short getShort(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return 0;
+	public String getString(String key) throws JMSException {
+		return (String) map.get(key);
 	}
 
 	@Override
-	public String getString(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return null;
+	public boolean itemExists(String key) throws JMSException {
+		return map.containsKey(key);
 	}
 
 	@Override
-	public boolean itemExists(String arg0) throws JMSException {
-		// TODO Auto-generated method stub
-		return false;
+	public void setBoolean(String key, boolean value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setBoolean(String arg0, boolean arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setByte(String key, byte value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setByte(String arg0, byte arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setBytes(String key, byte[] value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setBytes(String arg0, byte[] arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setBytes(String arg0, byte[] arg1, int arg2, int arg3)
+	public void setBytes(String key, byte[] value, int from, int to)
 			throws JMSException {
-		// TODO Auto-generated method stub
-		
+		map.put(key, Arrays.copyOfRange(value, from, to));
 	}
 
 	@Override
-	public void setChar(String arg0, char arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setChar(String key, char value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setDouble(String arg0, double arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setDouble(String key, double value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setFloat(String arg0, float arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setFloat(String key, float value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setInt(String arg0, int arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setInt(String key, int value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setLong(String arg0, long arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setLong(String key, long value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setObject(String arg0, Object arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setObject(String key, Object value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setShort(String arg0, short arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setShort(String key, short value) throws JMSException {
+		map.put(key, value);
 	}
 
 	@Override
-	public void setString(String arg0, String arg1) throws JMSException {
-		// TODO Auto-generated method stub
-		
+	public void setString(String key, String value) throws JMSException {
+		map.put(key, value);
 	}
 
 }

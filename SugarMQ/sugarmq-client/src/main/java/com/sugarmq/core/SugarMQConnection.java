@@ -1,6 +1,8 @@
 package com.sugarmq.core;
 
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -16,6 +18,7 @@ import javax.jms.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.message.bean.SugarMQMapMessage;
 import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.transport.SugarMQTransport;
 
@@ -26,14 +29,15 @@ import com.sugarmq.transport.SugarMQTransport;
  */
 public class SugarMQConnection implements Connection{
 	
-	private int customerBatchAckNum = 100;	// 批量消息应答数目
-	
 	private SugarMQTransport sugarMQTransport;
 	
 	private MessageDispatcher messageDispatcher;
 	
 	private AtomicBoolean isStarted = new AtomicBoolean(false);
 	private AtomicBoolean isClosed = new AtomicBoolean(false);
+	
+	// 连接参数Map
+	private ConcurrentMap<String, Object> params = new ConcurrentHashMap<String, Object>();
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQConnection.class);
 	
@@ -45,6 +49,7 @@ public class SugarMQConnection implements Connection{
 		this.sugarMQTransport = sugarMQTransport;
 		messageDispatcher = new MessageDispatcher(sugarMQTransport.getReceiveMessageQueue(), 
 				sugarMQTransport.getSendMessageQueue());
+		
 	}
 
 	@Override
@@ -120,6 +125,11 @@ public class SugarMQConnection implements Connection{
 			sugarMQTransport.start();
 			messageDispatcher.start();
 			
+			SugarMQMapMessage message = new SugarMQMapMessage();
+			
+			
+			messageDispatcher.sendMessage(message);
+			
 			isStarted.set(true);
 		}
 	}
@@ -129,20 +139,17 @@ public class SugarMQConnection implements Connection{
 		sugarMQTransport.close();
 	}
 
-	public int getCustomerBatchAckNum() {
-		return customerBatchAckNum;
+	public Object getParamValue(String key) {
+		return params.get(key);
 	}
 
-	public void setCustomerBatchAckNum(int customerBatchAckNum) {
+	public void setParamsValue(String key, Object value) {
 		synchronized (isStarted) {
 			if(isStarted.get()) {
 				throw new IllegalStateException("SugarMQConnection已经开启，无法设置customerBatchAckNum！");
 			}
 			
-			this.customerBatchAckNum = customerBatchAckNum;
+			params.put(key, value);
 		}
 	}
-	
-	
-
 }
