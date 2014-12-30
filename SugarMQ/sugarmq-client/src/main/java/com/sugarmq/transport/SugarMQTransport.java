@@ -15,7 +15,7 @@ import javax.jms.Message;
  * 
  */
 public abstract class SugarMQTransport {
-//	public int acknowledgeType; // 消息应答类型
+	public int acknowledgeType; // 消息应答类型
 /*	public String dispatchType; // 消息分发类型
 	
 	public abstract void sendMessage(Message message) throws JMSException;*/
@@ -46,13 +46,13 @@ public abstract class SugarMQTransport {
 	}
 	*/
 	
-/*	public void setAcknowledgeType(int acknowledgeType) {
+	public void setAcknowledgeType(int acknowledgeType) {
 		this.acknowledgeType = acknowledgeType;
 	}
 	
 	public int getAcknowledgeType() {
 		return acknowledgeType;
-	}*/
+	}
 	
 	/**
 	 * 开启传送通道

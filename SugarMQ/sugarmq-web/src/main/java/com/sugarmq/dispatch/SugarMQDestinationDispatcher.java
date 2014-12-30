@@ -11,10 +11,13 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.constant.ConnectionProperty;
+import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.manager.SugarMQConsumerManager;
 import com.sugarmq.manager.SugarMQMessageManager;
 import com.sugarmq.message.SugarMQDestination;
+import com.sugarmq.message.bean.SugarMQMapMessage;
 import com.sugarmq.message.bean.SugarMQMessage;
 
 /**
@@ -103,7 +106,22 @@ public class SugarMQDestinationDispatcher {
 						} else if(MessageType.CUSTOMER_MESSAGE_PULL.getValue().
 								equals(message.getJMSType())) {
 							logger.debug("消费者拉取消息【{}】", message);
-							// TODO:
+							
+							SugarMQDestination dest = (SugarMQDestination) message.getJMSDestination();
+							message.setJMSDestination(sugarMQMessageManager.getSugarMQMessageContainer(dest.getName()));
+							
+							sugarMQCustomerManager.updateConsumerState(dest.getName(), 
+									message.getStringProperty(MessageProperty.CUSTOMER_ID.getKey()), true);
+						
+						// 连接初始化参数的消息
+						} else if(MessageType.CONNECTION_INIT_PARAM.getValue().
+								equals(message.getJMSType())) {
+							logger.debug("连接初始化参数的消息【{}】", message);
+							SugarMQMapMessage mapMessage = (SugarMQMapMessage) message;
+							if(mapMessage.propertyExists(ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getKey())) {
+								sugarMQCustomerManager.setClientMessageBatchSendAmount(mapMessage.
+										getInt(ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getKey()));
+							}
 							
 						} else {
 							logger.error("未知消息类型，无法处理【{}】", message);

@@ -18,6 +18,8 @@ import javax.jms.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sugarmq.constant.ConnectionProperty;
+import com.sugarmq.constant.MessageType;
 import com.sugarmq.message.bean.SugarMQMapMessage;
 import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.transport.SugarMQTransport;
@@ -125,8 +127,11 @@ public class SugarMQConnection implements Connection{
 			sugarMQTransport.start();
 			messageDispatcher.start();
 			
+			// 将客户端的定制参数传给服务端
 			SugarMQMapMessage message = new SugarMQMapMessage();
-			
+			message.setJMSType(MessageType.CUSTOMER_MESSAGE_PULL.getValue());
+			message.setInt(ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getKey(), 
+					(int) ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getValue());
 			
 			messageDispatcher.sendMessage(message);
 			

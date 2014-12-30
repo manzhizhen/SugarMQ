@@ -4,12 +4,15 @@
 package com.sugarmq.manager;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.sugarmq.constant.ConnectionProperty;
 import com.sugarmq.constant.MessageProperty;
 import com.sugarmq.constant.MessageType;
 import com.sugarmq.dispatch.SugarMQConsumerDispatcher;
@@ -42,12 +46,15 @@ public class SugarMQConsumerManager {
 			new ConcurrentHashMap<String, BlockingQueue<Message>>();
 	
 	// key-目的地名称，value-消费者ID容器
-	private ConcurrentHashMap<String,  ErgodicArray<String>> destinationMap = 
-			new ConcurrentHashMap<String,  ErgodicArray<String>>();
+	private ConcurrentHashMap<String,  PollArray<String>> destinationMap = 
+			new ConcurrentHashMap<String,  PollArray<String>>();
 	
 	// 消息分发器
 	private ConcurrentHashMap<String, SugarMQConsumerDispatcher> consumerDispatcherMap = 
 			new ConcurrentHashMap<String, SugarMQConsumerDispatcher>();
+	
+	// 一次性向消费者推送的消息数量
+	private int clientMessageBatchSendAmount = (int) ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getValue();
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQConsumerManager.class);
 	
@@ -72,8 +79,8 @@ public class SugarMQConsumerManager {
 		}
 		
 		customerMap.put(customerId, sendMessageQueue);
-		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQDestination)message.
-				getJMSDestination()).getQueueName(), new ErgodicArray<String>());
+		PollArray<String> ergodicArray = destinationMap.putIfAbsent(((SugarMQDestination)message.
+				getJMSDestination()).getQueueName(), new PollArray<String>(10));
 		
 		if(ergodicArray == null) {
 			ergodicArray = destinationMap.get(((SugarMQDestination)message.
@@ -124,22 +131,43 @@ public class SugarMQConsumerManager {
 		logger.debug("准备将消息推送到一个消费者的待发送队列中【{}】", message);
 		
 		SugarMQMessageContainer sugarMQMessageContainer = (SugarMQMessageContainer) message.getJMSDestination();
-		ErgodicArray<String> ergodicArray = destinationMap.putIfAbsent(sugarMQMessageContainer.getQueueName(), new ErgodicArray<String>());
+		PollArray<String> pollArray = destinationMap.putIfAbsent(sugarMQMessageContainer.getQueueName(), new PollArray<String>(10));
 		
-		String nextCustomerId = ergodicArray.getNext();
+		String nextConsumerId;
+		try {
+			nextConsumerId = pollArray.getNext();
+		} catch (InterruptedException e) {
+			logger.error("获取下一个消费者ID失败", e);
+			throw new JMSException(String.format("获取下一个消费者ID失败:{}", e));
+		}
 		
-		BlockingQueue<Message> queue = customerMap.get(nextCustomerId);
-		message.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), nextCustomerId);
+		BlockingQueue<Message> queue = customerMap.get(nextConsumerId);
+		message.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), nextConsumerId);
 		SugarMQDestination dest = (SugarMQDestination) message.getJMSDestination();
 		message.setJMSDestination(new SugarMQDestination(dest.getName(), dest.getType()));
 		try {
 			queue.put(message);
 			// 之所以给消费者推送消息设置阻塞开关，是为了防止消费者处理不过来造成消费者端消息堆积，这里暂时不设置阻塞
-//			destinationMap.get(sugarMQMessageContainer.getQueueName()).setValue(nextCustomerId, false);
-			logger.debug("成功将消息【{}】推送到消费者【{}】队列！", message, nextCustomerId);
+			updateConsumerState(sugarMQMessageContainer.getQueueName(), nextConsumerId, false);
+			logger.debug("成功将消息【{}】推送到消费者【{}】队列！", message, nextConsumerId);
 		} catch (InterruptedException e) {
-			logger.error("将消息【{}】推送到消费者【{}】队列失败！", message, nextCustomerId);
+			logger.error("将消息【{}】推送到消费者【{}】队列失败！", message, nextConsumerId);
 		}
+	}
+	
+	/**
+	 * 更新消费者的空闲状态
+	 * @param queueName
+	 * @param consumerId
+	 * @param isIdel
+	 */
+	public void updateConsumerState(String queueName, String consumerId, boolean isIdel) {
+		if(!destinationMap.containsKey(queueName)) {
+			logger.error("更新消费者【{}】状态失败，不存在的消息队列【{}】", consumerId, queueName);
+			return ;
+		}
+		
+		destinationMap.get(queueName).setValue(consumerId, isIdel);	
 	}
 	
 	/**
@@ -171,37 +199,52 @@ public class SugarMQConsumerManager {
 	 *
 	 * 2014年12月12日
 	 */
-	class ErgodicArray<T> {
+	class PollArray<T> {
 		// Boolean表示该消费者是否已经准备好接收消息
 		private CopyOnWriteArrayList<Entry<T, Boolean>> contentArray = new CopyOnWriteArrayList<Entry<T, Boolean>>();
-		private int index = 0;
-		private ReentrantLock lock = new ReentrantLock();
+		private BlockingQueue<T> outputQueue;
 		
-		public T getNext() {
-			lock.lock();
-			
-			Entry<T, Boolean> entry = null;
-			while(true) {
-				
-				if(contentArray.isEmpty()) {
-					continue ;
-				}
-				
-				if(index >= contentArray.size()) {
-					index = 0;
-				}
-				
-				entry = (Entry<T, Boolean>) contentArray.get(index);
-				index++;
-				if(entry.getValue()) {
-					break ;
-					
-				}
+		private AtomicBoolean isClosed = new AtomicBoolean(false);
+		
+		private Thread thread;
+		
+		public PollArray(int outputQueueSize) {
+			if(outputQueueSize <= 0) {
+				throw new IllegalArgumentException();
 			}
 			
-			lock.unlock();
+			outputQueue = new LinkedBlockingQueue<T>(outputQueueSize);
 			
-			return entry.getKey();
+			thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					while(!isClosed.get()) {
+						Iterator<Entry<T, Boolean>> iterator = contentArray.iterator();
+						while(iterator.hasNext()) {
+							try {
+								if(!iterator.next().getValue()) {
+									continue ;
+								}
+								
+								outputQueue.put(iterator.next().getKey());
+							} catch (InterruptedException e) {
+								continue ;
+							}
+						}
+					}
+				}
+			});
+			
+			thread.start();
+			
+		}
+		
+		public T getNext() throws InterruptedException {
+			return outputQueue.take();
+		}
+		
+		public T getNext(long time) throws InterruptedException {
+			return outputQueue.poll(time, TimeUnit.MILLISECONDS);
 		}
 		
 		public void add(T t) {
@@ -209,9 +252,7 @@ public class SugarMQConsumerManager {
 		}
 		
 		public void remove(T t) {
-			lock.lock();
 			contentArray.remove(t);
-			lock.unlock();
 		}
 		
 		public boolean isEmpty() {
@@ -224,6 +265,13 @@ public class SugarMQConsumerManager {
 					entry.setValue(isIdle);
 					break ;
 				}
+			}
+		}
+		
+		public void close() {
+			isClosed.set(false);
+			if(thread != null) {
+				thread.interrupt();
 			}
 		}
 		
@@ -252,6 +300,14 @@ public class SugarMQConsumerManager {
 				return this.value;
 			}
 		}
+	}
+
+	public int getClientMessageBatchSendAmount() {
+		return clientMessageBatchSendAmount;
+	}
+
+	public void setClientMessageBatchSendAmount(int clientMessageBatchSendAmount) {
+		this.clientMessageBatchSendAmount = clientMessageBatchSendAmount;
 	}
 }
 
