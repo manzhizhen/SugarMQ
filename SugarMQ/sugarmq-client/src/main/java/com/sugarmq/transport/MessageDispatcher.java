@@ -117,6 +117,8 @@ public class MessageDispatcher {
 								
 								MessageConsumer consumer = consumerMap.get(customerId);
 								
+								consumer.
+								
 								ConsumeMessageTask task = new ConsumeMessageTask(consumer, message);
 								FutureTask<Object> futureTask = new FutureTask<Object>(task, new Object());
 								threadPoolExecutor.execute(futureTask);
@@ -307,43 +309,6 @@ public class MessageDispatcher {
 		
 		logger.debug("生成的消费者ID为【{}】", newId + next);
 		return newId + next;
-	}
-	
-	/**
-	 * 类说明：消息异步消费和应答
-	 *
-	 * 类描述：
-	 * @author manzhizhen
-	 *
-	 * 2014年12月17日
-	 */
-	class ConsumeMessageTask implements Runnable {
-		private MessageConsumer consumer;
-		private Message message;
-		
-		private Logger logger = LoggerFactory.getLogger(ConsumeMessageTask.class);
-		
-		public ConsumeMessageTask(MessageConsumer consumer, Message message) {
-			this.consumer = consumer;
-			this.message = message;
-		}
-
-		@Override
-		public void run() {
-			try {
-				MessageListener listener = consumer.getMessageListener();
-				if(listener == null) {
-					logger.error("消费者{}没有配置消息监听器！", consumer);
-					return ;
-				}
-				
-				listener.onMessage(message);
-				
-			} catch (JMSException e) {
-				logger.error("消费者{}消费消息失败！", e);
-			}
-			
-		}
 	}
 	
 	/**
