@@ -8,6 +8,9 @@ import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 
 
 
@@ -251,10 +254,6 @@ public abstract class Message implements javax.jms.Message, Serializable{
 	
 	@Override
 	public String toString() {
-		try {
-			return messageId + " " + getJMSType();
-		} catch (JMSException e) {
-			return messageId;
-		}
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SIMPLE_STYLE);
 	}
 }
