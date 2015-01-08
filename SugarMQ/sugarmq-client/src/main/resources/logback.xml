@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<substitutionProperty name="log.base" value="logs/oms-server" />
+	<substitutionProperty name="log.base" value="logs/sugarmq-client" />
 	<substitutionProperty name="max.size" value="500MB" />
 	<jmxConfigurator />
 	<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">	
@@ -13,7 +13,7 @@
 			class="ch.qos.logback.core.rolling.RollingFileAppender">
 			<File>d:/sugarmq-client.log</File>
 			<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-				<FileNamePattern>d:/sugarmq-client%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+				<FileNamePattern>d:/${log.base}/sugarmq-client%d{yyyy-MM-dd}.%i.log</FileNamePattern>
 				<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">  
 		      		<maxFileSize>${max.size}</maxFileSize>  
 		     	</timeBasedFileNamingAndTriggeringPolicy>  

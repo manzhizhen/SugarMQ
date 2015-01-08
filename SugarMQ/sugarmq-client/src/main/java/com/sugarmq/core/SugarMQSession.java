@@ -1,6 +1,7 @@
 package com.sugarmq.core;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -40,16 +41,22 @@ public class SugarMQSession implements Session{
 	
 	private MessageDispatcher messageDispatcher;
 	
-	public SugarMQSession(boolean transacted, MessageDispatcher messageDispatcher) throws JMSException {
-		this.sessionId = SessionIdGenerate.getNewSessionId();
+	// 消费者消费消息和发送应答消息的线程池执行器
+	private ThreadPoolExecutor threadPoolExecutor;
+	
+	public SugarMQSession(String sessionId, boolean transacted, MessageDispatcher messageDispatcher) throws JMSException {
+		this.sessionId = sessionId;
 		this.transacted = transacted;
 		this.messageDispatcher = messageDispatcher;
+	}
+	
+	public void start() {
+		threadPoolExecutor
 	}
 	
 	@Override
 	public void close() throws JMSException {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -84,7 +91,8 @@ public class SugarMQSession implements Session{
 			throw new JMSException("传入的Destination非法:" + destination);
 		}
 		
-		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(destination);
+		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(destination, 
+				messageDispatcher.getSendMessageQueue(), 10);
 		messageDispatcher.addConsumer(sugarQueueReceiver);
 		return sugarQueueReceiver;
 	}

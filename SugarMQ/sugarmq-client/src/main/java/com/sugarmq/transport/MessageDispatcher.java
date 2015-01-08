@@ -9,16 +9,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -38,7 +35,7 @@ import com.sugarmq.util.MessageIdGenerate;
  */
 public class MessageDispatcher {
 	// key-消费者ID，value-消费者对象
-	private ConcurrentMap<String, MessageConsumer> consumerMap = new ConcurrentHashMap<String, MessageConsumer>();
+	private ConcurrentMap<String, SugarMQMessageConsumer> consumerMap = new ConcurrentHashMap<String, SugarMQMessageConsumer>();
 //	private int nextIndex = 0;	// 下一个消费者索引
 	
 	// 消息的应答Map,key-发送的消息ID，value-消息应答成功的闭锁
@@ -115,48 +112,9 @@ public class MessageDispatcher {
 									continue ;
 								}
 								
-								MessageConsumer consumer = consumerMap.get(customerId);
-								
-								consumer.
-								
-								ConsumeMessageTask task = new ConsumeMessageTask(consumer, message);
-								FutureTask<Object> futureTask = new FutureTask<Object>(task, new Object());
-								threadPoolExecutor.execute(futureTask);
-								
-								try {
-									futureTask.get();
-									logger.debug("消费者【{}】消费消息【{}】成功！", consumer, message);
-								} catch (InterruptedException e) {
-									logger.error("消费者【{}】消费消息【{}】异常", consumer, message, e);
-								} catch (ExecutionException e) {
-									logger.error("消费者【{}】消费消息【{}】异常", consumer, message, e);
-								}
-								
-								// 消费完的应答消息
-								SugarMQMessage ackMessage = new SugarMQMessage();
-								ackMessage.setJMSMessageID(MessageIdGenerate.getNewMessageId());
-								ackMessage.setJMSType(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue());
-								ackMessage.setJMSCorrelationID(message.getJMSMessageID());
-								ackMessage.setJMSDestination(message.getJMSDestination());
-								try {
-									sendMessageQueue.put(ackMessage);
-									logger.debug("应答消息【{}】已被放入发送队列。", ackMessage);
-								} catch (InterruptedException e) {
-									logger.error("应答消息【{}】放入发送队列异常【{}】", ackMessage, e);
-								}
-								
-								// TODO：拉取消息的前置操作还没写
-								// 拉取消息
-								SugarMQMessage pullMessage = new SugarMQMessage();
-								pullMessage.setJMSMessageID(MessageIdGenerate.getNewMessageId());
-								pullMessage.setJMSType(MessageType.CUSTOMER_MESSAGE_PULL.getValue());
-								pullMessage.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), customerId);
-								pullMessage.setJMSDestination(message.getJMSDestination());
-								try {
-									sendMessageQueue.put(pullMessage);
-								} catch (InterruptedException e) {
-									logger.error("消费者拉取消息【{}】放入发送队列异常【{}】", ackMessage, e);
-								}
+								SugarMQMessageConsumer consumer = consumerMap.get(customerId);
+								// 将消息放入消费者的“食槽”中
+								consumer.putMessage(message);
 								
 								// 消费者注册应答消息	
 							} else if(MessageType.CUSTOMER_REGISTER_ACKNOWLEDGE_MESSAGE.getValue().
@@ -311,6 +269,17 @@ public class MessageDispatcher {
 		return newId + next;
 	}
 	
+	
+	
+	/**
+	 * @return the sendMessageQueue
+	 */
+	public BlockingQueue<Message> getSendMessageQueue() {
+		return sendMessageQueue;
+	}
+
+
+
 	/**
 	 * 类说明：带有消息负载的闭锁
 	 *

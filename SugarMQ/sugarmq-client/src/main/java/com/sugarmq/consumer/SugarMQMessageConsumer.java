@@ -14,6 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sugarmq.constant.ConsumerState;
+import com.sugarmq.constant.MessageProperty;
+import com.sugarmq.constant.MessageType;
+import com.sugarmq.message.bean.SugarMQMessage;
+import com.sugarmq.util.MessageIdGenerate;
 
 public class SugarMQMessageConsumer implements MessageConsumer {
 	private String consumerId;	// 消费者ID，可以由客户端设置，但最终由服务端来决定
@@ -23,16 +27,28 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 	private String messageSelector;
 	private Destination destination;
 	
-	private Runnable run;
+	private Runnable consumeMessageTask;
+	private Runnable ackMessageTask;
 	
 	// 未消费的消息队列
 	private BlockingQueue<Message> messageQueue;
+	// 已消费但还未应答的消息队列
+	private BlockingQueue<Message> ackMessageQueue;
+	
+	// SugarMQTransport中的消息发送队列
+	private BlockingQueue<Message> sendMessageQueue;
 	
 	private MessageListener messageListener;
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQMessageConsumer.class);
 	
-	public SugarMQMessageConsumer(Destination destination, int cacheSize){
+	/**
+	 * 
+	 * @param destination
+	 * @param sendMessageQueue SugarMQTransport中的sendMessageQueue
+	 * @param cacheSize 消息缓冲队列的大小
+	 */
+	public SugarMQMessageConsumer(Destination destination, BlockingQueue<Message> sendMessageQueue, int cacheSize){
 		if(destination == null) {
 			throw new IllegalArgumentException("创建消费者失败，Destination为空！");
 		}
@@ -44,8 +60,11 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 		this.destination = destination;
 		
 		messageQueue = new LinkedBlockingQueue<Message>(cacheSize);
+		ackMessageQueue = new LinkedBlockingQueue<Message>(cacheSize);
+		this.sendMessageQueue = sendMessageQueue;
 		
-		run = new ConsumeMessageTask(this);
+		consumeMessageTask = new ConsumeMessageTask(this);
+		ackMessageTask = new AckMessageTask(this);
 		
 		// 设置状态为创建状态
 		state = ConsumerState.CREATE.getValue();
@@ -131,10 +150,14 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 	public String getState() {
 		return state;
 	}
+	
+	public BlockingQueue<Message> getAckMessageQueue() {
+		return ackMessageQueue;
+	}
 
 
 	/**
-	 * 类说明：消息异步消费和应答
+	 * 类说明：消费消息线程
 	 *
 	 * 类描述：
 	 * @author manzhizhen
@@ -165,11 +188,26 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 						ConsumerState.WORKING.getValue().equals(consumer.getState())) {
 					try {
 						message = queue.poll();
+						// 如果消息缓存空了，就向服务端发送拉取消息
 						if(message == null) {
+							// 发送拉取消息
+							SugarMQMessage pullMessage = new SugarMQMessage();
+							pullMessage.setStringProperty(MessageProperty.CUSTOMER_ID.getKey(), consumerId);
+							pullMessage.setJMSMessageID(MessageIdGenerate.getNewMessageId());
+							pullMessage.setJMSType(MessageType.CUSTOMER_MESSAGE_PULL.getValue());
+							pullMessage.setJMSDestination(message.getJMSDestination());
+							sendMessageQueue.put(pullMessage);
 							
-						} else {
-							listener.onMessage(queue.take());
-						}
+							logger.debug("拉取消息【{}】已被放入发送队列。", pullMessage);
+							
+							message = queue.take();
+						} 
+						
+						// 消费消息
+						listener.onMessage(message);
+						// 放入应答队列
+						consumer.getAckMessageQueue().put(message);
+						
 					} catch (InterruptedException e) {
 						logger.error("消费者【{}】消费消息线程被中断【{}】", consumer, e);
 						break ;
@@ -178,6 +216,48 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 				
 			} catch (JMSException e) {
 				logger.error("消费者【{}】消费消息失败：【{}】", consumer, e);
+			}
+		}
+	}
+	
+	/**
+	 * 类说明：应答消息线程
+	 *
+	 * 类描述：
+	 * @author manzhizhen
+	 *
+	 * 2014年12月17日
+	 */
+	class AckMessageTask implements Runnable {
+		private SugarMQMessageConsumer consumer;
+		
+		private Logger logger = LoggerFactory.getLogger(ConsumeMessageTask.class);
+		
+		public AckMessageTask(SugarMQMessageConsumer consumer) {
+			this.consumer = consumer;
+		}
+
+		@Override
+		public void run() {
+			Message message = null;
+			while(!Thread.currentThread().isInterrupted() && 
+						ConsumerState.WORKING.getValue().equals(consumer.getState())) {
+				try {
+					message = consumer.getAckMessageQueue().take();
+					// 创建应答消息
+					SugarMQMessage ackMessage = new SugarMQMessage();
+					ackMessage.setJMSType(MessageType.CUSTOMER_ACKNOWLEDGE_MESSAGE.getValue());
+					ackMessage.setJMSCorrelationID(message.getJMSMessageID());
+					ackMessage.setJMSMessageID(MessageIdGenerate.getNewMessageId());
+					ackMessage.setJMSDestination(message.getJMSDestination());
+					sendMessageQueue.put(ackMessage);
+					logger.debug("应答消息【{}】已被放入发送队列。", ackMessage);
+					
+				} catch (InterruptedException e) {
+					logger.debug("AckMessageTask 被中断");
+				} catch (JMSException e) {
+					logger.error("【{}】发送应消息【{}】失败：【{}】", consumer, message, e);
+				}
 			}
 			
 		}

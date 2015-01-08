@@ -1,6 +1,7 @@
 package com.sugarmq.core;
 
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +24,7 @@ import com.sugarmq.constant.MessageType;
 import com.sugarmq.message.bean.SugarMQMapMessage;
 import com.sugarmq.transport.MessageDispatcher;
 import com.sugarmq.transport.SugarMQTransport;
+import com.sugarmq.util.SessionIdGenerate;
 
 /**
  * 
@@ -34,6 +36,9 @@ public class SugarMQConnection implements Connection{
 	private SugarMQTransport sugarMQTransport;
 	
 	private MessageDispatcher messageDispatcher;
+	
+	// key-sessionID，value-session
+	private Map<String, SugarMQSession> sessionMap = new ConcurrentHashMap<String, SugarMQSession>();
 	
 	private AtomicBoolean isStarted = new AtomicBoolean(false);
 	private AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -88,7 +93,9 @@ public class SugarMQConnection implements Connection{
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
 		sugarMQTransport.setAcknowledgeType(acknowledgeMode);
-		SugarMQSession sugarMQSession = new SugarMQSession(transacted, messageDispatcher);
+		String sessionId = SessionIdGenerate.getNewSessionId();
+		SugarMQSession sugarMQSession = new SugarMQSession(sessionId, transacted, messageDispatcher);
+		sessionMap.put(sessionId, sugarMQSession);
 		return sugarMQSession;
 	}
 
@@ -134,6 +141,10 @@ public class SugarMQConnection implements Connection{
 					(int) ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getValue());
 			
 			messageDispatcher.sendMessage(message);
+			
+			for(SugarMQSession session : sessionMap.values()) {
+				session.start();
+			}
 			
 			isStarted.set(true);
 		}
