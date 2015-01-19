@@ -4,6 +4,8 @@ package com.sugarmq.core;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -45,6 +47,9 @@ public class SugarMQConnection implements Connection{
 	
 	// 连接参数Map
 	private ConcurrentMap<String, Object> params = new ConcurrentHashMap<String, Object>();
+	
+	// 消费者消费消息和发送应答消息的线程池执行器
+	private ThreadPoolExecutor threadPoolExecutor;
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQConnection.class);
 	
@@ -141,6 +146,9 @@ public class SugarMQConnection implements Connection{
 					(int) ConnectionProperty.CLIENT_MESSAGE_BATCH_ACK_QUANTITY.getValue());
 			
 			messageDispatcher.sendMessage(message);
+			
+			// 消费者消费消息和发送应答消息的线程池执行器
+			threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 			
 			for(SugarMQSession session : sessionMap.values()) {
 				session.start();

@@ -3,6 +3,7 @@ package com.sugarmq.consumer;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -40,6 +41,8 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 	
 	private MessageListener messageListener;
 	
+	private AtomicBoolean isStarted = new AtomicBoolean(false);
+	
 	private Logger logger = LoggerFactory.getLogger(SugarMQMessageConsumer.class);
 	
 	/**
@@ -69,6 +72,13 @@ public class SugarMQMessageConsumer implements MessageConsumer {
 		// 设置状态为创建状态
 		state = ConsumerState.CREATE.getValue();
 		logger.debug("新建立了一个消费者");
+	}
+	
+	/**
+	 * 开启一个消费者
+	 */
+	public void start() {
+		// TODO:
 	}
 	
 	/**

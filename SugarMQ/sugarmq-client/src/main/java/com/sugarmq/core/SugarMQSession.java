@@ -1,7 +1,10 @@
 package com.sugarmq.core;
 
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -36,13 +39,13 @@ import com.sugarmq.util.SessionIdGenerate;
 public class SugarMQSession implements Session{
 	private String sessionId;
 	private boolean transacted;	// 事务标记
+	private MessageDispatcher messageDispatcher;
+	// key-消费者ID，value-消费者对象
+	private ConcurrentMap<String, SugarMQMessageConsumer> consumerMap = new ConcurrentHashMap<String, SugarMQMessageConsumer>();
+	
+	private AtomicBoolean isStarted = new AtomicBoolean(false); 
 	
 	private Logger logger = LoggerFactory.getLogger(SugarMQSession.class);
-	
-	private MessageDispatcher messageDispatcher;
-	
-	// 消费者消费消息和发送应答消息的线程池执行器
-	private ThreadPoolExecutor threadPoolExecutor;
 	
 	public SugarMQSession(String sessionId, boolean transacted, MessageDispatcher messageDispatcher) throws JMSException {
 		this.sessionId = sessionId;
@@ -51,7 +54,13 @@ public class SugarMQSession implements Session{
 	}
 	
 	public void start() {
-		threadPoolExecutor
+		synchronized (isStarted) {
+			for(SugarMQMessageConsumer consumer : consumerMap.values()) {
+				consumer.start();
+			}
+			
+			isStarted.set(true);
+		}
 	}
 	
 	@Override
@@ -94,6 +103,8 @@ public class SugarMQSession implements Session{
 		SugarMQMessageConsumer sugarQueueReceiver = new SugarMQMessageConsumer(destination, 
 				messageDispatcher.getSendMessageQueue(), 10);
 		messageDispatcher.addConsumer(sugarQueueReceiver);
+		
+		consumerMap.put(sugarQueueReceiver.getConsumerId(), sugarQueueReceiver);
 		return sugarQueueReceiver;
 	}
 
